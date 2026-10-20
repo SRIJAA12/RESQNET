@@ -1,0 +1,114 @@
+# ==============================================================================
+# RESQNET — Root .gitignore
+# Full-Stack: FastAPI (Python 3.11) + React (TypeScript/Vite) + Docker + Terraform
+# ==============================================================================
+
+# ── Environment & Secrets ─────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.crt
+secrets/
+credentials/
+
+# ── Python / Backend ──────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / Packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Testing, Linting & Typing
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+coverage.xml
+*.cover
+
+# SQLite Databases / Local state
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Node / Frontend (React + Vite + TypeScript) ──────────────────────────────
+node_modules/
+dist/
+dist-ssr/
+out/
+.vite/
+.eslintcache
+.turbo/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+lerna-debug.log*
+*.local
+
+# ── Terraform & Infrastructure ───────────────────────────────────────────────
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+*.tfvars
+*.tfvars.json
+
+# ── Docker & Container Logs ──────────────────────────────────────────────────
+*.docker.log
+*.log
+logs/
+
+# ── Operating System ─────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ── IDEs & Editors ───────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# ── Agentic & Workspace Artifacts ─────────────────────────────────────────────
+.agents/
+.tempmediaStorage/

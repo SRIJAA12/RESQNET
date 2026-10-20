@@ -1,0 +1,79 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: resqnet_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-resqnet_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-resqnet_password}
+      POSTGRES_DB: ${POSTGRES_DB:-resqnet_db}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-resqnet_user} -d ${POSTGRES_DB:-resqnet_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - resqnet_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: resqnet_backend
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DEBUG: ${DEBUG:-true}
+      HOST: 0.0.0.0
+      PORT: 8000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-resqnet_user}:${POSTGRES_PASSWORD:-resqnet_password}@postgres:5432/${POSTGRES_DB:-resqnet_db}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:5174}
+      USE_AWS_SERVICES: ${USE_AWS_SERVICES:-false}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production-must-be-32-chars-long}
+    ports:
+      - "${BACKEND_PORT:-8001}:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - resqnet_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: resqnet_frontend
+    restart: unless-stopped
+    environment:
+      - VITE_API_BASE_URL=http://localhost:${BACKEND_PORT:-8001}/api
+    ports:
+      - "${FRONTEND_PORT:-5174}:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - resqnet_network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  resqnet_network:
+    driver: bridge

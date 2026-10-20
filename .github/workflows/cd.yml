@@ -1,0 +1,114 @@
+name: RESQNET Continuous Deployment (AWS OIDC)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target AWS deployment environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
+
+permissions:
+  id-token: write # Mandatory for GitHub OIDC Federation
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to AWS via OIDC
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    env:
+      AWS_REGION: us-east-1
+      ECR_REPOSITORY: resqnet-backend-${{ inputs.environment }}
+      ECS_CLUSTER: resqnet-cluster-${{ inputs.environment }}
+      ECS_SERVICE: resqnet-backend-service-${{ inputs.environment }}
+      S3_FRONTEND_BUCKET: resqnet-frontend-${{ inputs.environment }}
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to AWS via OIDC (No Hardcoded Keys)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OIDC_DEPLOY_ROLE_ARN }}
+          role-session-name: GitHubActions-RESQNET-Deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      # 1. Backend Build and Push to Amazon ECR
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, Tag, and Push Backend Image
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest ./backend
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      # 2. Deploy Backend to Amazon ECS Fargate
+      - name: Deploy Amazon ECS Service
+        run: |
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER \
+            --service $ECS_SERVICE \
+            --force-new-deployment \
+            --region $AWS_REGION
+
+      # 3. Build Frontend and Publish to Amazon S3
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Frontend Dependencies & Build Bundle
+        working-directory: frontend
+        env:
+          VITE_API_BASE_URL: ${{ secrets.PROD_API_BASE_URL || 'https://api.resqnet.example.com/api' }}
+        run: |
+          npm ci || npm install
+          npm run build
+
+      - name: Sync Frontend Assets to Amazon S3
+        run: |
+          aws s3 sync frontend/dist/ s3://$S3_FRONTEND_BUCKET/ --delete
+
+      # 4. Invalidate CloudFront CDN Cache
+      - name: Invalidate CloudFront Distribution Cache
+        env:
+          CLOUDFRONT_DIST_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+        run: |
+          if [ -n "$CLOUDFRONT_DIST_ID" ]; then
+            aws cloudfront create-invalidation \
+              --distribution-id $CLOUDFRONT_DIST_ID \
+              --paths "/*"
+          fi
+
+      # 5. Automated Deployment Smoke Test
+      - name: Execute Deployment Smoke Test
+        env:
+          ALB_URL: ${{ secrets.BACKEND_ALB_URL }}
+        run: |
+          if [ -n "$ALB_URL" ]; then
+            echo "Waiting for ECS service stability..."
+            aws ecs wait services-stable --cluster $ECS_CLUSTER --services $ECS_SERVICE --region $AWS_REGION
+            echo "Executing smoke test against health endpoint..."
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" $ALB_URL/api/health)
+            if [ "$STATUS" -ne 200 ]; then
+              echo "Smoke test failed! HTTP status: $STATUS"
+              exit 1
+            fi
+            echo "Smoke test passed successfully."
+          else
+            echo "BACKEND_ALB_URL secret not set. Skipping live curl smoke test."
+          fi

@@ -1,0 +1,17 @@
+{
+  "short_name": "RESQNET",
+  "name": "RESQNET Disaster Relief Coordination Ecosystem",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#070d19",
+  "theme_color": "#0284c7",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "description": "Simulation emergency management and multi-agency response portal"
+}
