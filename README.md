@@ -9,6 +9,9 @@
 > [!CAUTION]
 > **SIMULATION & TRAINING NOTICE:** RESQNET is designed for simulated emergency management and exercise demonstrations. All demonstration data (coordinates, contact numbers, incident reports) are **100% fictional**. This system is **not connected to official 911 or emergency services**. In an actual life-threatening emergency, contact local emergency services immediately.
 
+> [!TIP]
+> **New to the Project?** Read the step-by-step **[Collaborator & Getting Started Guide](docs/COLLABORATOR_GUIDE.md)** to clone and run both local Docker services and live AWS cloud features in under 5 minutes!
+
 ---
 
 ## 1. Product Overview
