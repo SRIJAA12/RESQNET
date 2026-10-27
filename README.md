@@ -89,30 +89,53 @@ Requires Docker Desktop installed and running:
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/organization/resqnet.git
-   cd resqnet
+   git clone https://github.com/SRIJAA12/RESQNET.git
+   cd RESQNET
    ```
 
-2. **Copy the environment configuration:**
-   ```bash
-   cp .env.example .env
-   ```
-
-3. **Start the complete stack (PostGIS + FastAPI + Vite Frontend):**
+2. **Start the complete stack (PostGIS + FastAPI + Vite Frontend):**
    ```bash
    docker compose up --build
    ```
+   *(All default environment configurations are built-in. No manual `.env` is required to run!)*
 
-4. **Seed synthetic flood response demonstration data:**
-   In another terminal:
+3. **Seed synthetic flood response demonstration data:**
+   In a second terminal:
    ```bash
    docker compose exec backend python -m app.db.seed
    ```
 
-5. **Access the application:**
-   * **Frontend Web App:** [http://localhost:5173](http://localhost:5173)
-   * **Backend Health Check:** [http://localhost:8000/api/health](http://localhost:8000/api/health)
-   * **Interactive API Documentation:** [http://localhost:8000/api/docs](http://localhost:8000/api/docs)
+4. **Access the application:**
+   * **Frontend Web App:** [http://localhost:5174](http://localhost:5174)
+   * **Backend Health Check:** [http://localhost:8001/api/health](http://localhost:8001/api/health)
+   * **Interactive API Documentation:** [http://localhost:8001/api/docs](http://localhost:8001/api/docs)
+   * **PostgreSQL / PostGIS Database:** `localhost:5433` (`resqnet_db`)
+
+---
+
+### Option B: AWS Serverless Citizen SOS Pipeline
+
+RESQNET includes a dedicated, highly-available serverless emergency pipeline (AWS SAM, Lambda, DynamoDB, API Gateway HTTP API) located in `backend_serverless/`.
+
+#### Using the Live Deployed Cloud Backend (Default)
+When running `docker compose up`, the frontend is automatically pre-configured to communicate with the live AWS deployment in `eu-west-1`:
+* **Live API Gateway:** `https://ncwcst8z63.execute-api.eu-west-1.amazonaws.com/v1`
+* Anyone running the frontend can immediately submit citizen SOS requests (`/sos`) and track tickets in real-time (`/status`) against the live cloud DynamoDB table.
+
+#### Deploying to Your Own AWS Account
+If you or a collaborator want to deploy your own separate AWS serverless stack:
+
+1. **Prerequisites:**
+   * [AWS CLI](https://aws.amazon.com/cli/) configured (`aws configure`)
+   * [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html) installed (`sam --version`)
+2. **Build and deploy:**
+   ```bash
+   sam build
+   sam deploy
+   ```
+   *(All defaults, IAM capabilities, and table overrides are saved in `samconfig.toml`)*
+3. **Copy your API Gateway URL:**
+   Update `VITE_SERVERLESS_API_URL` in `frontend/.env` with your newly deployed URL.
 
 ---
 
