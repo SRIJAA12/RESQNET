@@ -1,30 +1,34 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { api } from '../services/api';
-import { Incident } from '../types';
-import { 
-  ShieldAlert, 
-  MapPin, 
-  Users, 
-  HeartPulse, 
-  Send, 
-  CheckCircle2, 
-  Copy, 
-  Check, 
-  AlertCircle, 
-  ArrowRight, 
+import {
+  submitSos,
+  persistRefCode,
+  clearPersistedRefCode,
+  type SosSubmissionResponse,
+} from '../services/sosApi';
+import {
+  ShieldAlert,
+  MapPin,
+  Users,
+  HeartPulse,
+  Send,
+  CheckCircle2,
+  Copy,
+  Check,
+  AlertCircle,
+  ArrowRight,
   ArrowLeft,
   LifeBuoy,
   PhoneCall,
   Info,
-  Clock
+  Clock,
 } from 'lucide-react';
 
 export const RequestAssistancePage: React.FC = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
-  const [submittedIncident, setSubmittedIncident] = useState<Incident | null>(null);
+  const [submittedIncident, setSubmittedIncident] = useState<SosSubmissionResponse | null>(null);
   const [copied, setCopied] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -94,7 +98,8 @@ export const RequestAssistancePage: React.FC = () => {
     setErrorMsg(null);
 
     try {
-      const created = await api.createIncident({
+      clearPersistedRefCode();
+      const created = await submitSos({
         reporter_name: reporterName.trim(),
         reporter_contact: reporterContact.trim(),
         reporter_is_victim: isVictim,
@@ -108,6 +113,8 @@ export const RequestAssistancePage: React.FC = () => {
         longitude: Number(longitude),
         disaster_type: 'flood',
       });
+      // Store only the opaque reference code in session storage — no PII
+      persistRefCode(created.reference_code);
       setSubmittedIncident(created);
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to submit distress request. Please try again.');
@@ -162,21 +169,38 @@ export const RequestAssistancePage: React.FC = () => {
                 {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
+            {submittedIncident.priority && (
+              <div className="flex items-center justify-center gap-2 pt-1">
+                <span className={`px-3 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border ${
+                  submittedIncident.priority === 'critical'
+                    ? 'bg-red-50 text-red-700 border-red-200'
+                    : submittedIncident.priority === 'high'
+                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                    : 'bg-blue-50 text-blue-700 border-blue-200'
+                }`}>
+                  {submittedIncident.priority} priority
+                </span>
+                <span className="text-xs text-slate-400 font-mono capitalize">
+                  Status: {submittedIncident.status}
+                </span>
+              </div>
+            )}
             <p className="text-xs text-slate-500">
               Save this reference code to monitor real-time responder dispatch and shelter intake.
             </p>
           </div>
 
-          {/* Clear Simulation Notice */}
+          {/* Notice */}
           <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-left text-xs text-amber-900 space-y-1">
             <div className="flex items-center gap-1.5 font-bold text-amber-950">
               <AlertCircle className="w-4 h-4 text-amber-700" />
-              <span>Demonstration Simulation Notice:</span>
+              <span>Important Notice:</span>
             </div>
             <p className="leading-relaxed">
-              This request was saved into the <strong>RESQNET local simulation database</strong>. It has <strong>NOT</strong> contacted 911, local police, or municipal fire departments. In an actual real-life emergency, please call official emergency numbers.
+              Your SOS has been submitted to the <strong>RESQNET emergency coordination pipeline</strong> and is pending dispatcher review. This platform does <strong>NOT</strong> replace 911 or official emergency services. In a life-threatening situation, also contact your local emergency number immediately.
             </p>
           </div>
+
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <Link

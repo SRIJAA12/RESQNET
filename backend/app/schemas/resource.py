@@ -23,6 +23,11 @@ class ResourceCreate(ResourceBase):
     pass
 
 
+class ResourceStatusUpdate(BaseModel):
+    status: ResourceStatusEnum
+    operational_notes: Optional[str] = None
+
+
 class ResourceResponse(ResourceBase):
     id: str
     created_at: datetime

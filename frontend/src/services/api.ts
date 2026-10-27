@@ -1132,12 +1132,13 @@ class ApiClient {
     }
   }
 
-  async getIncidents(params?: { status?: string; priority?: string; search?: string }): Promise<Incident[]> {
+  async getIncidents(params?: { status?: string; priority?: string; search?: string; sync?: boolean }): Promise<Incident[]> {
     try {
       const query = new URLSearchParams();
       if (params?.status) query.set('status', params.status);
       if (params?.priority) query.set('priority', params.priority);
       if (params?.search) query.set('search', params.search);
+      if (params?.sync) query.set('sync', 'true');
       const res = await this.request<{ items: Incident[] }>(`/v1/incidents?${query.toString()}`);
       return res.items;
     } catch {
@@ -1153,6 +1154,18 @@ class ApiClient {
         );
       }
       return list;
+    }
+  }
+
+  async syncIncidents(): Promise<{ synced_count: number; skipped_count: number; total_examined: number; synced_references: string[] }> {
+    try {
+      const res = await this.request<{ data: { synced_count: number; skipped_count: number; total_examined: number; synced_references: string[] } }>('/v1/incidents/sync', {
+        method: 'POST',
+      });
+      return res.data;
+    } catch (err) {
+      console.warn('Incident sync failed or in mock mode:', err);
+      return { synced_count: 0, skipped_count: 0, total_examined: 0, synced_references: [] };
     }
   }
 
@@ -1311,6 +1324,17 @@ class ApiClient {
   }
 
   async updateResource(id: string, data: Partial<Resource>): Promise<Resource> {
+    try {
+      if (data.status) {
+        const res = await this.request<{ data: Resource }>(`/v1/resources/${id}/status`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status: data.status, notes: data.operational_notes }),
+        });
+        return res.data;
+      }
+    } catch (e) {
+      console.warn(`[RESQNET API] Fallback for updateResource ${id}:`, e);
+    }
     const res = this.inMemoryResources.find(r => r.id === id);
     if (!res) throw new Error(`Resource '${id}' not found.`);
     Object.assign(res, data, { updated_at: new Date().toISOString() });
@@ -1318,6 +1342,15 @@ class ApiClient {
   }
 
   async updateResourceStatus(id: string, status: ResourceStatus, notes?: string): Promise<Resource> {
+    try {
+      const res = await this.request<{ data: Resource }>(`/v1/resources/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status, notes }),
+      });
+      return res.data;
+    } catch (e) {
+      console.warn(`[RESQNET API] Fallback for updateResourceStatus ${id}:`, e);
+    }
     const res = this.inMemoryResources.find(r => r.id === id);
     if (!res) throw new Error(`Resource '${id}' not found.`);
     res.status = status;
@@ -1357,9 +1390,14 @@ class ApiClient {
   }
 
   async getFacility(id: string): Promise<Facility> {
-    const found = this.inMemoryFacilities.find(f => f.id === id);
-    if (!found) throw new Error(`Facility '${id}' not found.`);
-    return found;
+    try {
+      const res = await this.request<{ data: Facility }>(`/v1/shelters/${id}`);
+      return res.data;
+    } catch {
+      const found = this.inMemoryFacilities.find(f => f.id === id);
+      if (!found) throw new Error(`Facility '${id}' not found.`);
+      return found;
+    }
   }
 
   async createFacility(data: any): Promise<Facility> {
@@ -1369,6 +1407,31 @@ class ApiClient {
     }
     if (Number(data.current_occupancy) < 0) {
       throw new Error('Current occupancy cannot be negative.');
+    }
+
+    try {
+      const payload = {
+        name: data.name,
+        address: data.address,
+        latitude: Number(data.latitude) || 28.5800,
+        longitude: Number(data.longitude) || 77.2200,
+        capacity_total: data.capacity_total ? Number(data.capacity_total) : 100,
+        current_occupancy: Number(data.current_occupancy) || 0,
+        status: data.status || 'active',
+        contact_phone: data.contact_phone || '',
+        manager_name: data.manager_name || '',
+        medical_facilities_available: Boolean(data.medical_facilities_available),
+        generator_backup: Boolean(data.generator_backup),
+        pet_friendly: Boolean(data.pet_friendly),
+        water_purification_capacity_liters: Number(data.water_purification_capacity_liters) || 1000
+      };
+      const res = await this.request<{ data: Facility }>('/v1/shelters', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      return res.data;
+    } catch (e) {
+      console.warn('[RESQNET API] Fallback for createFacility:', e);
     }
 
     const capTotal = data.capacity_total === null || data.capacity_total === '' ? null : Number(data.capacity_total);
@@ -1413,15 +1476,30 @@ class ApiClient {
   }
 
   async updateFacility(id: string, data: Partial<Facility>): Promise<Facility> {
-    const fac = this.inMemoryFacilities.find(f => f.id === id);
-    if (!fac) throw new Error(`Facility '${id}' not found.`);
-
     if (data.capacity_total !== undefined && data.capacity_total !== null && data.capacity_total < 0) {
       throw new Error('Total capacity cannot be negative.');
     }
     if (data.current_occupancy !== undefined && data.current_occupancy < 0) {
       throw new Error('Current occupancy cannot be negative.');
     }
+
+    try {
+      const res = await this.request<{ data: Facility }>(`/v1/shelters/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          current_occupancy: data.current_occupancy,
+          capacity_total: data.capacity_total,
+          status: data.status,
+          notes: 'Facility capacity updated'
+        }),
+      });
+      return res.data;
+    } catch (e) {
+      console.warn(`[RESQNET API] Fallback for updateFacility ${id}:`, e);
+    }
+
+    const fac = this.inMemoryFacilities.find(f => f.id === id);
+    if (!fac) throw new Error(`Facility '${id}' not found.`);
 
     Object.assign(fac, data, { updated_at: new Date().toISOString(), last_census_updated_at: new Date().toISOString() });
     if (fac.capacity_total !== null && fac.capacity_total !== undefined) {
@@ -1434,12 +1512,25 @@ class ApiClient {
   }
 
   async updateFacilityOccupancy(id: string, newOccupancy: number, notes?: string): Promise<Facility> {
-    const fac = this.inMemoryFacilities.find(f => f.id === id);
-    if (!fac) throw new Error(`Facility '${id}' not found.`);
-
     if (newOccupancy < 0) {
       throw new Error('Occupancy count cannot be negative.');
     }
+
+    try {
+      const res = await this.request<{ data: Facility }>(`/v1/shelters/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          current_occupancy: newOccupancy,
+          notes: notes || 'Census head-count update logged by facility manager'
+        }),
+      });
+      return res.data;
+    } catch (e) {
+      console.warn(`[RESQNET API] Fallback for updateFacilityOccupancy ${id}:`, e);
+    }
+
+    const fac = this.inMemoryFacilities.find(f => f.id === id);
+    if (!fac) throw new Error(`Facility '${id}' not found.`);
 
     fac.current_occupancy = newOccupancy;
     if (fac.capacity_total !== null && fac.capacity_total !== undefined) {
@@ -1477,6 +1568,22 @@ class ApiClient {
 
   // ── Inventory ──────────────────────────────────────────────────────────────
   async getInventoryItems(params?: { category?: string; search?: string; organization_name?: string }): Promise<InventoryItem[]> {
+    try {
+      const query = new URLSearchParams();
+      if (params?.category && params.category !== 'all') query.set('category', params.category);
+      if (params?.search) query.set('search', params.search);
+      const res = await this.request<{ items: any[] }>(`/v1/inventory?${query.toString()}`);
+      if (res?.items && res.items.length > 0) {
+        return res.items.map(item => ({
+          ...item,
+          organization_name: item.organization_name || 'Riverbend Relief Logistics',
+          storage_location: item.storage_location || 'Central Depot 1',
+        }));
+      }
+    } catch (e) {
+      console.warn('[RESQNET API] Fallback for getInventoryItems:', e);
+    }
+
     let list = [...this.inMemoryInventory];
     if (params?.organization_name) {
       list = list.filter(i => i.organization_name.toLowerCase().includes(params.organization_name!.toLowerCase()));
@@ -1496,15 +1603,47 @@ class ApiClient {
   }
 
   async getInventoryItem(id: string): Promise<InventoryItem> {
-    const found = this.inMemoryInventory.find(i => i.id === id);
-    if (!found) throw new Error(`Inventory item '${id}' not found.`);
-    return found;
+    try {
+      const res = await this.request<{ data: any }>(`/v1/inventory/${id}`);
+      return {
+        ...res.data,
+        organization_name: res.data.organization_name || 'Riverbend Relief Logistics',
+        storage_location: res.data.storage_location || 'Central Depot 1',
+      };
+    } catch {
+      const found = this.inMemoryInventory.find(i => i.id === id);
+      if (!found) throw new Error(`Inventory item '${id}' not found.`);
+      return found;
+    }
   }
 
   async createInventoryItem(data: any): Promise<InventoryItem> {
     if (Number(data.quantity) < 0) {
       throw new Error('Initial quantity cannot be negative.');
     }
+
+    try {
+      const payload = {
+        item_name: data.item_name,
+        category: data.category || 'water',
+        quantity: Number(data.quantity) || 0,
+        unit: data.unit || 'units',
+        reorder_threshold: Number(data.reorder_threshold) || 10,
+        shelter_id: data.facility_id || null,
+      };
+      const res = await this.request<{ data: any }>('/v1/inventory', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      return {
+        ...res.data,
+        organization_name: data.organization_name || 'Riverbend Relief Logistics',
+        storage_location: data.storage_location || 'Central Depot 1',
+      };
+    } catch (e) {
+      console.warn('[RESQNET API] Fallback for createInventoryItem:', e);
+    }
+
     const newItem: InventoryItem = {
       id: `inv-${Date.now()}`,
       item_name: data.item_name,
@@ -1524,6 +1663,20 @@ class ApiClient {
   }
 
   async updateInventoryQuantity(id: string, delta: number, reason: string): Promise<InventoryItem> {
+    try {
+      const res = await this.request<{ data: any }>(`/v1/inventory/${id}/quantity`, {
+        method: 'PATCH',
+        body: JSON.stringify({ delta, reason }),
+      });
+      return {
+        ...res.data,
+        organization_name: res.data.organization_name || 'Riverbend Relief Logistics',
+        storage_location: res.data.storage_location || 'Central Depot 1',
+      };
+    } catch (e) {
+      console.warn(`[RESQNET API] Fallback for updateInventoryQuantity ${id}:`, e);
+    }
+
     const item = this.inMemoryInventory.find(i => i.id === id);
     if (!item) throw new Error(`Inventory item '${id}' not found.`);
 
@@ -1922,8 +2075,45 @@ class ApiClient {
     return list;
   }
 
+  // ── Assignments ────────────────────────────────────────────────────────────
+  async getAssignments(params?: { status?: string }): Promise<ResourceAssignment[]> {
+    try {
+      const query = new URLSearchParams();
+      if (params?.status) query.set('status', params.status);
+      const res = await this.request<{ data: ResourceAssignment[] }>(`/v1/assignments?${query.toString()}`);
+      if (res?.data) return res.data;
+    } catch (e) {
+      console.warn('[RESQNET API] Fallback for getAssignments:', e);
+    }
+    return [];
+  }
+
   // ── Phase 6: Audit Trail ───────────────────────────────────────────────────
   async getAuditLogs(params?: { record_type?: string; actor_role?: string; search?: string }): Promise<AuditLogEntry[]> {
+    try {
+      const query = new URLSearchParams();
+      if (params?.record_type && params.record_type !== 'all') query.set('entity_type', params.record_type);
+      if (params?.search) query.set('search', params.search);
+      const res = await this.request<{ items: any[] }>(`/v1/audit-logs?${query.toString()}`);
+      if (res?.items && res.items.length > 0) {
+        return res.items.map(l => ({
+          id: l.id,
+          timestamp: l.timestamp,
+          actor_id: 'usr-sys',
+          actor_name: l.performed_by,
+          actor_role: 'Operations Dispatcher',
+          action: l.action,
+          record_type: (l.entity_type as any) || 'system',
+          record_id: l.entity_id,
+          record_ref: l.entity_id,
+          ip_address: l.ip_address || '127.0.0.1',
+          reason: l.changes_json || 'System operation executed'
+        }));
+      }
+    } catch (e) {
+      console.warn('[RESQNET API] Fallback for getAuditLogs:', e);
+    }
+
     let list = [...this.inMemoryAuditLogs];
     if (params?.record_type && params.record_type !== 'all') {
       list = list.filter(l => l.record_type === params.record_type);
@@ -1944,6 +2134,29 @@ class ApiClient {
   }
 
   async recordAuditLog(entry: Omit<AuditLogEntry, 'id' | 'timestamp'>): Promise<AuditLogEntry> {
+    try {
+      const res = await this.request<{ data: any }>('/v1/audit-logs', {
+        method: 'POST',
+        body: JSON.stringify({
+          entity_type: entry.record_type,
+          entity_id: entry.record_id,
+          action: entry.action,
+          performed_by: entry.actor_name,
+          changes_json: entry.new_state ? JSON.stringify({ prev: entry.previous_state, next: entry.new_state, reason: entry.reason }) : null,
+          ip_address: entry.ip_address || '127.0.0.1'
+        }),
+      });
+      if (res?.data) {
+        return {
+          id: res.data.id,
+          timestamp: res.data.timestamp,
+          ...entry
+        };
+      }
+    } catch (e) {
+      console.warn('[RESQNET API] Fallback for recordAuditLog:', e);
+    }
+
     const newLog: AuditLogEntry = {
       id: `aud-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       timestamp: new Date().toISOString(),
@@ -1957,6 +2170,25 @@ class ApiClient {
   // ── Phase 6: Disaster Events ───────────────────────────────────────────────
   async createEvent(data: Partial<DisasterEvent>): Promise<DisasterEvent> {
     if (!data.name?.trim()) throw new Error('Disaster Event name is required.');
+
+    try {
+      const res = await this.request<{ data: DisasterEvent }>('/v1/events', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: data.name,
+          disaster_type: data.disaster_type || 'flood',
+          status: data.status || 'active',
+          severity: data.severity || 'high',
+          description: data.description || '',
+          affected_region_name: data.affected_region_name || 'Central River Basin',
+          declaration_date: new Date().toISOString()
+        }),
+      });
+      return res.data;
+    } catch (e) {
+      console.warn('[RESQNET API] Fallback for createEvent:', e);
+    }
+
     const newEvent: DisasterEvent = {
       id: `evt-${Date.now()}`,
       name: data.name,
@@ -1984,6 +2216,16 @@ class ApiClient {
   }
 
   async updateEvent(id: string, data: Partial<DisasterEvent>): Promise<DisasterEvent> {
+    try {
+      const res = await this.request<{ data: DisasterEvent }>(`/v1/events/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      });
+      return res.data;
+    } catch (e) {
+      console.warn(`[RESQNET API] Fallback for updateEvent ${id}:`, e);
+    }
+
     const evt = this.inMemoryEvents.find(e => e.id === id);
     if (!evt) throw new Error(`Disaster event '${id}' not found.`);
     const prevState = `severity: ${evt.severity}, status: ${evt.status}`;

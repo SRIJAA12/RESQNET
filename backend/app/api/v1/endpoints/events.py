@@ -36,3 +36,24 @@ def create_event(
         message="Disaster event successfully initialized",
         data=DisasterEventResponse.model_validate(event)
     )
+
+
+@router.patch("/{event_id}", response_model=APIResponse[DisasterEventResponse])
+def update_event(
+    event_id: str,
+    updates: dict,
+    db: Session = Depends(get_db),
+    current_user: AuthUser = Depends(require_role("dispatcher"))
+):
+    service = EventService(db)
+    event = service.update_event(event_id, updates)
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Disaster event '{event_id}' not found."
+        )
+    return APIResponse(
+        success=True,
+        message="Disaster event updated successfully",
+        data=DisasterEventResponse.model_validate(event)
+    )

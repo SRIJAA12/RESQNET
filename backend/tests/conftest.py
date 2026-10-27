@@ -1,8 +1,9 @@
 import os
 import sys
 
-# Ensure backend root is on sys.path for app imports
+# Ensure backend root and repository root are on sys.path for app and backend_serverless imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 import pytest
 from fastapi.testclient import TestClient

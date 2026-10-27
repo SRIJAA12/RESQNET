@@ -30,3 +30,26 @@ class EventService:
 
     def get_event(self, event_id: str) -> Optional[DisasterEvent]:
         return self.repo.get_by_id(event_id)
+
+    def update_event(self, event_id: str, updates: dict) -> Optional[DisasterEvent]:
+        event = self.repo.get_by_id(event_id)
+        if not event:
+            return None
+        from app.models.event import DisasterSeverityEnum, EventStatusEnum
+        if "severity" in updates and updates["severity"]:
+            try:
+                event.severity = DisasterSeverityEnum(updates["severity"])
+            except ValueError:
+                pass
+        if "status" in updates and updates["status"]:
+            try:
+                event.status = EventStatusEnum(updates["status"])
+            except ValueError:
+                pass
+        if "description" in updates:
+            event.description = updates["description"]
+        if "affected_region_name" in updates:
+            event.affected_region_name = updates["affected_region_name"]
+        self.db.commit()
+        self.db.refresh(event)
+        return event

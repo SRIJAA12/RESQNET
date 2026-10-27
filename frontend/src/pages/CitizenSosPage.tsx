@@ -3,21 +3,25 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useNavigate, Link } from 'react-router-dom';
-import { 
-  ShieldAlert, 
-  MapPin, 
-  HeartPulse, 
-  Users, 
-  Send, 
-  CheckCircle2, 
-  Copy, 
-  Check, 
+import {
+  ShieldAlert,
+  MapPin,
+  HeartPulse,
+  Users,
+  Send,
+  CheckCircle2,
+  Copy,
+  Check,
   AlertCircle,
   HelpCircle,
   ArrowRight
 } from 'lucide-react';
-import { api } from '../services/api';
-import { Incident } from '../types';
+import {
+  submitSos,
+  persistRefCode,
+  clearPersistedRefCode,
+  type SosSubmissionResponse,
+} from '../services/sosApi';
 
 const sosSchema = z.object({
   reporter_name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -38,7 +42,7 @@ type SosFormValues = z.infer<typeof sosSchema>;
 export const CitizenSosPage: React.FC = () => {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
-  const [submittedIncident, setSubmittedIncident] = useState<Incident | null>(null);
+  const [submittedIncident, setSubmittedIncident] = useState<SosSubmissionResponse | null>(null);
   const [copied, setCopied] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -71,10 +75,13 @@ export const CitizenSosPage: React.FC = () => {
     setSubmitting(true);
     setErrorMsg(null);
     try {
-      const result = await api.createIncident({
+      clearPersistedRefCode();
+      const result = await submitSos({
         ...values,
         disaster_type: 'flood',
       });
+      // Store only the opaque reference code — no PII
+      persistRefCode(result.reference_code);
       setSubmittedIncident(result);
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to submit emergency request. Please try again.');

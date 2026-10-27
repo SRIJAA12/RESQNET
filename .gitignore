@@ -112,3 +112,4 @@ Desktop.ini
 # ── Agentic & Workspace Artifacts ─────────────────────────────────────────────
 .agents/
 .tempmediaStorage/
+.aws-sam/

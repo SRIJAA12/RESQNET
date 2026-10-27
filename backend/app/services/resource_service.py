@@ -61,3 +61,32 @@ class ResourceService:
 
     def get_available_resources(self) -> List[Resource]:
         return self.repo.get_available_resources()
+
+    def update_resource_status(
+        self,
+        resource_id: str,
+        new_status: ResourceStatusEnum,
+        operational_notes: Optional[str] = None,
+        updated_by: str = "dispatcher"
+    ) -> Optional[Resource]:
+        resource = self.repo.get_by_id(resource_id)
+        if not resource:
+            return None
+        prev_status = resource.status.value
+        resource.status = new_status
+        if operational_notes:
+            resource.operational_notes = (
+                f"{resource.operational_notes} | {operational_notes}"
+                if resource.operational_notes else operational_notes
+            )
+        self.db.commit()
+        self.db.refresh(resource)
+
+        self.audit_repo.record_event(
+            entity_type="resource",
+            entity_id=resource.id,
+            action="resource_status_updated",
+            performed_by=updated_by,
+            changes={"previous_status": prev_status, "new_status": new_status.value}
+        )
+        return resource

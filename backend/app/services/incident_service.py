@@ -153,13 +153,56 @@ class IncidentService:
         if not incident:
             return None
 
+        # 1. Mandatory rejection reason validation
+        if update.status == IncidentStatusEnum.REJECTED:
+            if not update.notes or not update.notes.strip():
+                raise ValueError("A specific operational reason is required to reject an emergency SOS.")
+
+        # 2. Status transition validation
+        valid_transitions = {
+            IncidentStatusEnum.SUBMITTED: {
+                IncidentStatusEnum.UNDER_REVIEW,
+                IncidentStatusEnum.VERIFIED,
+                IncidentStatusEnum.REJECTED,
+            },
+            IncidentStatusEnum.UNDER_REVIEW: {
+                IncidentStatusEnum.VERIFIED,
+                IncidentStatusEnum.REJECTED,
+                IncidentStatusEnum.SUBMITTED,
+            },
+            IncidentStatusEnum.VERIFIED: {
+                IncidentStatusEnum.ASSIGNED,
+                IncidentStatusEnum.IN_PROGRESS,
+                IncidentStatusEnum.REJECTED,
+                IncidentStatusEnum.UNDER_REVIEW,
+            },
+            IncidentStatusEnum.ASSIGNED: {
+                IncidentStatusEnum.IN_PROGRESS,
+                IncidentStatusEnum.RESOLVED,
+                IncidentStatusEnum.VERIFIED,
+            },
+            IncidentStatusEnum.IN_PROGRESS: {
+                IncidentStatusEnum.RESOLVED,
+                IncidentStatusEnum.ASSIGNED,
+            },
+            IncidentStatusEnum.RESOLVED: set(),
+            IncidentStatusEnum.REJECTED: set(),
+        }
+
+        if update.status != incident.status:
+            allowed = valid_transitions.get(incident.status, set())
+            if update.status not in allowed:
+                raise ValueError(
+                    f"Invalid status transition from '{incident.status.value}' to '{update.status.value}'."
+                )
+
         previous_status = incident.status.value
         new_status = update.status.value
 
         incident.status = update.status
         updated = self.repo.update(incident)
 
-        # Add history entry
+        # Add history entry in PostgreSQL
         self.repo.add_status_history(
             incident_id=incident.id,
             previous_status=previous_status,
@@ -168,7 +211,7 @@ class IncidentService:
             notes=update.notes
         )
 
-        # Audit log
+        # Audit log in PostgreSQL
         self.audit_repo.record_event(
             entity_type="incident",
             entity_id=incident.id,
@@ -177,4 +220,22 @@ class IncidentService:
             changes={"from": previous_status, "to": new_status, "notes": update.notes}
         )
 
+        # 3. Synchronize status milestone back to DynamoDB for citizen tracking
+        try:
+            from app.services.incident_sync_service import IncidentSyncService
+            sync_service = IncidentSyncService(self.db)
+            sync_service.push_status_milestone_to_dynamo(
+                reference_code=incident.reference_code,
+                new_status=new_status,
+                notes=update.notes
+            )
+        except Exception as sync_err:
+            # Operational status update in PostgreSQL succeeded; log sync warning
+            import logging
+            logging.getLogger(__name__).warning(
+                "Could not push status milestone to DynamoDB for %s: %s",
+                incident.reference_code, str(sync_err)
+            )
+
         return updated
+

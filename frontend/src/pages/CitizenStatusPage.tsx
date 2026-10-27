@@ -1,29 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { 
-  Search, 
-  Clock, 
-  MapPin, 
-  Users, 
-  HeartPulse, 
-  Truck, 
-  CheckCircle2, 
-  ShieldAlert, 
+import { useSearchParams, Link } from 'react-router-dom';
+import {
+  Search,
+  Clock,
+  MapPin,
+  Users,
+  HeartPulse,
+  Truck,
+  CheckCircle2,
+  ShieldAlert,
   AlertCircle,
   Sparkles,
   ArrowRight
 } from 'lucide-react';
-import { api } from '../services/api';
-import { Incident } from '../types';
+import {
+  trackByRef,
+  getPersistedRefCode,
+  type SosTrackingResponse,
+} from '../services/sosApi';
 import { StatusBadge } from '../components/StatusBadge';
 
 export const CitizenStatusPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialRef = searchParams.get('ref') || '';
 
-  const [refInput, setRefInput] = useState(initialRef);
+  const [refInput, setRefInput] = useState(initialRef || getPersistedRefCode() || '');
   const [loading, setLoading] = useState(false);
-  const [incident, setIncident] = useState<Incident | null>(null);
+  const [incident, setIncident] = useState<SosTrackingResponse | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const fetchStatus = async (code: string) => {
@@ -31,7 +34,7 @@ export const CitizenStatusPage: React.FC = () => {
     setLoading(true);
     setErrorMsg(null);
     try {
-      const data = await api.getIncidentByRef(code.trim());
+      const data = await trackByRef(code.trim());
       setIncident(data);
       setSearchParams({ ref: code.trim() });
     } catch (err: any) {
@@ -110,22 +113,13 @@ export const CitizenStatusPage: React.FC = () => {
         </button>
       </form>
 
-      {/* Quick Demo Previews */}
+      {/* Tip for finding codes */}
       <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
-        <span>Try sample codes:</span>
-        <button
-          onClick={() => { setRefInput('SOS-2026-FLOOD-8492'); fetchStatus('SOS-2026-FLOOD-8492'); }}
-          className="underline hover:text-relief-400 font-mono"
-        >
-          SOS-2026-FLOOD-8492
-        </button>
-        <span>&bull;</span>
-        <button
-          onClick={() => { setRefInput('SOS-2026-FLOOD-8494'); fetchStatus('SOS-2026-FLOOD-8494'); }}
-          className="underline hover:text-relief-400 font-mono"
-        >
-          SOS-2026-FLOOD-8494
-        </button>
+        <span>Submit an SOS on the{' '}</span>
+        <Link to="/request-assistance" className="underline hover:text-relief-400 font-semibold">
+          Request Assistance
+        </Link>
+        <span>page to get your reference code.</span>
       </div>
 
       {errorMsg && (
@@ -234,16 +228,16 @@ export const CitizenStatusPage: React.FC = () => {
                   Operational Activity Log
                 </span>
                 <div className="space-y-2">
-                  {incident.status_history.map((hist) => (
-                    <div key={hist.id} className="flex items-start gap-3 p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/60 text-xs">
+                  {incident.status_history.map((hist, i) => (
+                    <div key={`${hist.status}-${i}`} className="flex items-start gap-3 p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/60 text-xs">
                       <Clock className="w-3.5 h-3.5 text-slate-500 mt-0.5 shrink-0" />
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <span className="font-semibold text-slate-200 capitalize">
-                            Status changed to {hist.new_status.replace('_', ' ')}
+                            Status changed to {hist.status.replace(/_/g, ' ')}
                           </span>
                           <span className="text-[10px] text-slate-500">
-                            {new Date(hist.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {new Date(hist.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
                         {hist.notes && <p className="text-slate-400 text-[11px] mt-0.5">{hist.notes}</p>}

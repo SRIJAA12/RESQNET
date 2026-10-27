@@ -20,8 +20,11 @@ import {
   FileText,
   Home
 } from 'lucide-react';
-import { api } from '../services/api';
-import { Incident } from '../types';
+import {
+  trackByRef,
+  getPersistedRefCode,
+  type SosTrackingResponse,
+} from '../services/sosApi';
 
 export const TrackRequestPage: React.FC = () => {
   const { requestId } = useParams<{ requestId?: string }>();
@@ -30,17 +33,26 @@ export const TrackRequestPage: React.FC = () => {
 
   const initialCode = (requestId || queryRef || '').trim();
   const [codeInput, setCodeInput] = useState(initialCode);
-  const [incident, setIncident] = useState<Incident | null>(null);
+  const [incident, setIncident] = useState<SosTrackingResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Pre-fill with the reference code from the most recent submission in this session
+  useEffect(() => {
+    if (!initialCode) {
+      const persisted = getPersistedRefCode();
+      if (persisted) {
+        setCodeInput(persisted);
+      }
+    }
+  }, []);
 
   const fetchRequest = async (ref: string) => {
     if (!ref.trim()) return;
     setLoading(true);
     setErrorMsg(null);
     try {
-      // Lookup by reference code or ID
-      const data = await api.getIncidentByRef(ref.trim());
+      const data = await trackByRef(ref.trim());
       setIncident(data);
       // Update query param if not in direct :requestId route
       if (!requestId) {
@@ -70,26 +82,6 @@ export const TrackRequestPage: React.FC = () => {
     }
   };
 
-  // Mask sensitive identity details for public safety & privacy protection
-  const maskName = (name?: string) => {
-    if (!name) return 'Protected Citizen';
-    const parts = name.trim().split(/\s+/);
-    return parts
-      .map((part) => {
-        if (part.length <= 1) return part;
-        return part[0] + '*'.repeat(Math.min(part.length - 1, 5));
-      })
-      .join(' ');
-  };
-
-  const maskPhone = (phone?: string) => {
-    if (!phone) return 'Protected Contact';
-    const clean = phone.trim();
-    if (clean.length < 7) return '***-***-****';
-    const first3 = clean.slice(0, 3);
-    const last3 = clean.slice(-3);
-    return `${first3}-***-${last3}`;
-  };
 
   const getStatusStepIndex = (status: string) => {
     switch (status) {
@@ -180,39 +172,16 @@ export const TrackRequestPage: React.FC = () => {
           </button>
         </form>
 
-        {/* Quick Sample Links */}
+        {/* Session hint — if a code was persisted from this session */}
         <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-          <span className="font-medium text-slate-700">Sample active requests:</span>
-          <button
-            type="button"
-            onClick={() => {
-              setCodeInput('SOS-2026-FLOOD-8492');
-              fetchRequest('SOS-2026-FLOOD-8492');
-            }}
-            className="font-mono bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded transition-colors"
-          >
-            SOS-2026-FLOOD-8492
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setCodeInput('SOS-2026-FLOOD-8493');
-              fetchRequest('SOS-2026-FLOOD-8493');
-            }}
-            className="font-mono bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded transition-colors"
-          >
-            SOS-2026-FLOOD-8493
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setCodeInput('SOS-2026-FLOOD-8494');
-              fetchRequest('SOS-2026-FLOOD-8494');
-            }}
-            className="font-mono bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded transition-colors"
-          >
-            SOS-2026-FLOOD-8494
-          </button>
+          <span className="font-medium text-slate-700">Tip:</span>
+          <span>
+            After submitting an SOS on the{' '}
+            <Link to="/request-assistance" className="underline text-teal-700 hover:text-teal-800 font-semibold">
+              Request Assistance
+            </Link>
+            {' '}page, your unique reference code (e.g. <span className="font-mono">SOS-2026-FLOOD-XXXX</span>) will appear here automatically.
+          </span>
         </div>
       </div>
 
@@ -380,7 +349,10 @@ export const TrackRequestPage: React.FC = () => {
                   </div>
                   <div className="flex justify-between py-1">
                     <span className="text-slate-500">Reporter:</span>
-                    <span className="font-mono text-slate-700">{maskName(incident.reporter_name)}</span>
+                    <span className="font-mono text-slate-700 flex items-center gap-1">
+                      <Lock className="w-3 h-3 text-slate-400" />
+                      Protected (masked)
+                    </span>
                   </div>
                 </div>
               </div>
@@ -394,8 +366,9 @@ export const TrackRequestPage: React.FC = () => {
                   <div className="text-slate-800 font-medium">
                     {incident.address_text}
                   </div>
-                  <div className="text-xs text-slate-500 font-mono">
-                    Coordinates: {incident.latitude.toFixed(4)}° N, {incident.longitude.toFixed(4)}° E
+                  <div className="text-xs text-slate-500 font-mono flex items-center gap-1">
+                    <Lock className="w-3 h-3 text-slate-400" />
+                    Coordinates protected for operational security
                   </div>
                   <div className="pt-2 text-xs text-slate-600 bg-white p-2.5 rounded-xl border border-slate-200">
                     <span className="font-semibold text-slate-900">Description: </span>
@@ -455,15 +428,15 @@ export const TrackRequestPage: React.FC = () => {
               <div className="relative pl-6 space-y-4 before:content-[''] before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
                 {incident.status_history && incident.status_history.length > 0 ? (
                   incident.status_history.map((h, i) => (
-                    <div key={h.id || i} className="relative text-xs">
+                    <div key={`${h.status}-${i}`} className="relative text-xs">
                       <div className="absolute -left-6 top-0.5 w-4 h-4 rounded-full bg-teal-600 border-2 border-white ring-1 ring-slate-200" />
                       <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-slate-900 uppercase tracking-wider">
-                            {h.new_status.replace('_', ' ')}
+                            {h.status.replace(/_/g, ' ')}
                           </span>
                           <span className="text-[11px] text-slate-400">
-                            {new Date(h.created_at).toLocaleTimeString([], {
+                            {new Date(h.timestamp).toLocaleTimeString([], {
                               hour: '2-digit',
                               minute: '2-digit',
                             })}

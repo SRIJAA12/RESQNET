@@ -147,6 +147,17 @@ class AssignmentService:
                 notes=data.dispatcher_notes or "Dispatched by authorized human control room"
             )
 
+            # Propagate milestone update to DynamoDB
+            try:
+                from app.services.incident_sync_service import push_status_milestone_to_dynamo
+                push_status_milestone_to_dynamo(
+                    incident.reference_code,
+                    new_incident_status.value,
+                    f"Resource '{resource.name}' assigned by dispatcher"
+                )
+            except Exception:
+                pass
+
             return assignment
 
         except HTTPException:
@@ -161,3 +172,77 @@ class AssignmentService:
 
     def list_by_incident(self, incident_id: str) -> List[ResourceAssignment]:
         return self.repo.list_by_incident(incident_id)
+
+    def list_assignments(
+        self,
+        status: Optional[str] = None,
+        page: int = 1,
+        page_size: int = 50
+    ):
+        query = self.db.query(ResourceAssignment)
+        if status:
+            query = query.filter(ResourceAssignment.status == status)
+        total_count = query.count()
+        skip = (page - 1) * page_size
+        items = query.order_by(ResourceAssignment.created_at.desc()).offset(skip).limit(page_size).all()
+        return items, total_count
+
+    def update_assignment_status(
+        self,
+        assignment_id: str,
+        new_status: AssignmentStatusEnum,
+        notes: Optional[str] = None,
+        cancellation_reason: Optional[str] = None,
+        updated_by: str = "dispatcher"
+    ) -> Optional[ResourceAssignment]:
+        assignment = self.db.query(ResourceAssignment).filter(ResourceAssignment.id == assignment_id).first()
+        if not assignment:
+            return None
+
+        prev_status = assignment.status.value
+        assignment.status = new_status
+        now_dt = datetime.now(timezone.utc)
+
+        # Release or manage linked resource and incident
+        resource = self.db.query(Resource).filter(Resource.id == assignment.resource_id).first()
+        incident = self.db.query(Incident).filter(Incident.id == assignment.incident_id).first()
+
+        if new_status == AssignmentStatusEnum.DISPATCHED:
+            assignment.dispatched_at = now_dt
+            if incident:
+                incident.status = IncidentStatusEnum.IN_PROGRESS
+                try:
+                    from app.services.incident_sync_service import push_status_milestone_to_dynamo
+                    push_status_milestone_to_dynamo(incident.reference_code, "in_progress", notes or "Unit dispatched")
+                except Exception:
+                    pass
+
+        elif new_status == AssignmentStatusEnum.COMPLETED:
+            assignment.completed_at = now_dt
+            if resource:
+                resource.status = ResourceStatusEnum.AVAILABLE
+            if incident:
+                incident.status = IncidentStatusEnum.RESOLVED
+                try:
+                    from app.services.incident_sync_service import push_status_milestone_to_dynamo
+                    push_status_milestone_to_dynamo(incident.reference_code, "resolved", notes or "Rescue mission completed")
+                except Exception:
+                    pass
+
+        elif new_status == AssignmentStatusEnum.CANCELLED:
+            assignment.cancelled_at = now_dt
+            assignment.cancellation_reason = cancellation_reason or notes
+            if resource:
+                resource.status = ResourceStatusEnum.AVAILABLE
+
+        self.db.commit()
+        self.db.refresh(assignment)
+
+        self.audit_repo.record_event(
+            entity_type="assignment",
+            entity_id=assignment.id,
+            action="assignment_status_updated",
+            performed_by=updated_by,
+            changes={"previous_status": prev_status, "new_status": new_status.value}
+        )
+        return assignment

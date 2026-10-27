@@ -1,0 +1,149 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  RESQNET - Phase 1: Local-First AWS Serverless Citizen SOS Pipeline
+  Serverless disaster-relief coordination platform handling public incident ingestion,
+  idempotent tracking references, and DynamoDB single-table persistence.
+
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 256
+    Runtime: python3.11
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref ResqnetCoreTable
+        ENVIRONMENT: !Ref Environment
+        POWERTOOLS_SERVICE_NAME: resqnet-serverless
+        DYNAMODB_ENDPOINT_URL: !Ref DynamoDBEndpoint
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - test
+      - staging
+      - prod
+    Description: Deployment environment stage.
+  TableName:
+    Type: String
+    Default: resqnet-core-table
+    Description: DynamoDB Single-Table name for RESQNET domain entities.
+  DynamoDBEndpoint:
+    Type: String
+    Default: ''
+    Description: Optional custom DynamoDB endpoint URL for local emulation (leave empty in AWS).
+
+Resources:
+  # ── API Gateway HTTP API (v2) ───────────────────────────────────────────────
+  ResqnetHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: $default
+      CorsConfiguration:
+        AllowOrigins:
+          - 'http://localhost:5173'
+          - 'http://localhost:5174'
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+          - X-Request-ID
+        MaxAge: 600
+
+  # ── Core DynamoDB Single-Table ─────────────────────────────────────────────
+  ResqnetCoreTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref TableName
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: GSI1_PK
+          AttributeType: S
+        - AttributeName: GSI1_SK
+          AttributeType: S
+        - AttributeName: GSI2_PK
+          AttributeType: S
+        - AttributeName: GSI2_SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        # GSI1: Status & Queue Operations (e.g. GSI1_PK=STATUS#submitted, GSI1_SK=<created_at>)
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: GSI1_PK
+              KeyType: HASH
+            - AttributeName: GSI1_SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        # GSI2: Public Reference Lookup (e.g. GSI2_PK=REF#SOS-2026-FLOOD-8492, GSI2_SK=METADATA)
+        - IndexName: GSI2
+          KeySchema:
+            - AttributeName: GSI2_PK
+              KeyType: HASH
+            - AttributeName: GSI2_SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  # ── Public Incidents Lambda Function ────────────────────────────────────────
+  PublicIncidentsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend_serverless/
+      Handler: handlers.public_incidents.lambda_handler
+      Description: Ingests citizen emergency SOS reports and provides sanitized request tracking.
+      Policies:
+        # Least-privilege IAM policy: restricted to the single declared table and its GSIs
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:Query
+                - dynamodb:UpdateItem
+              Resource:
+                - !GetAtt ResqnetCoreTable.Arn
+                - !Sub '${ResqnetCoreTable.Arn}/index/*'
+      Events:
+        CreatePublicIncident:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ResqnetHttpApi
+            Path: /v1/public/incidents
+            Method: POST
+        GetPublicIncidentByRef:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ResqnetHttpApi
+            Path: /v1/public/incidents/ref/{referenceCode}
+            Method: GET
+
+Outputs:
+  HttpApiUrl:
+    Description: Base URL of the API Gateway HTTP API stage
+    Value: !Sub 'https://${ResqnetHttpApi}.execute-api.${AWS::Region}.amazonaws.com/v1'
+  PublicIncidentsFunctionArn:
+    Description: Public Incidents Lambda Function ARN
+    Value: !GetAtt PublicIncidentsFunction.Arn
+  DynamoDBTableName:
+    Description: Resqnet Core DynamoDB Table Name
+    Value: !Ref ResqnetCoreTable
