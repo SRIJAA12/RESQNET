@@ -68,8 +68,8 @@ export const DemoRoleSwitcher: React.FC<{ compact?: boolean }> = ({ compact = fa
     <>
       {/* Role Switcher Widget */}
       <div className="relative inline-block text-left font-mono">
-        <div className="flex items-center gap-1.5 p-1 rounded-lg bg-midnight/90 border border-border shadow-lg">
-          <div className="hidden sm:flex items-center gap-1 px-2 py-0.5 rounded bg-amber/10 border border-amber/30 text-[10px] text-amber uppercase font-bold tracking-wider">
+        <div className="flex items-center gap-1.5 p-1 rounded-lg bg-slate-100 dark:bg-midnight/90 border border-slate-200 dark:border-border shadow-sm dark:shadow-lg">
+          <div className={`hidden ${compact ? '2xl:flex' : 'sm:flex'} items-center gap-1 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/30 text-[10px] text-amber-800 dark:text-amber uppercase font-bold tracking-wider`}>
             <span className="w-1.5 h-1.5 rounded-full bg-amber animate-pulse" />
             <span>DEMO ROLE:</span>
           </div>
@@ -77,18 +77,18 @@ export const DemoRoleSwitcher: React.FC<{ compact?: boolean }> = ({ compact = fa
           <button
             type="button"
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2 px-2.5 py-1 rounded bg-deep-slate hover:bg-slate-800 text-xs text-cloud-white font-medium border border-border/80 transition-colors"
+            className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded bg-white hover:bg-slate-50 dark:bg-deep-slate dark:hover:bg-slate-800 text-xs text-slate-800 dark:text-cloud-white font-medium border border-slate-200 dark:border-border/80 transition-colors shadow-sm"
             title="Switch demo user role"
           >
             {currentConfig.icon}
-            <span className="font-semibold text-[11px]">{currentConfig.badge}</span>
-            <ChevronDown className="w-3 h-3 text-text-muted" />
+            <span className="font-semibold text-[11px] truncate max-w-[140px] sm:max-w-none">{currentConfig.badge}</span>
+            <ChevronDown className="w-3 h-3 text-slate-400 dark:text-text-muted" />
           </button>
 
           <button
             type="button"
             onClick={() => setShowInfoModal(true)}
-            className="p-1 rounded text-text-muted hover:text-cloud-white hover:bg-slate-800 transition-colors"
+            className="p-1 rounded text-slate-500 hover:text-slate-900 hover:bg-slate-200 dark:text-text-muted dark:hover:text-cloud-white dark:hover:bg-slate-800 transition-colors"
             title="Prototype role security notice"
           >
             <Info className="w-3.5 h-3.5" />
@@ -97,17 +97,17 @@ export const DemoRoleSwitcher: React.FC<{ compact?: boolean }> = ({ compact = fa
 
         {/* Dropdown Menu */}
         {dropdownOpen && (
-          <div className="absolute right-0 mt-2 w-72 sm:w-80 rounded-xl bg-deep-slate border border-border shadow-2xl z-50 overflow-hidden divide-y divide-border/60">
+          <div className="absolute right-0 mt-2 w-72 sm:w-80 rounded-xl bg-white dark:bg-deep-slate border border-slate-200 dark:border-border shadow-2xl z-50 overflow-hidden divide-y divide-slate-100 dark:divide-border/60 text-slate-800 dark:text-cloud-white">
             {/* Header / Disclaimer Banner */}
-            <div className="p-3 bg-midnight/80">
-              <div className="flex items-center justify-between text-[10px] font-bold uppercase text-amber tracking-wider">
+            <div className="p-3 bg-slate-50 dark:bg-midnight/80">
+              <div className="flex items-center justify-between text-[10px] font-bold uppercase text-amber-800 dark:text-amber tracking-wider">
                 <span className="flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" />
+                  <Sparkles className="w-3 h-3 text-amber-500" />
                   Prototype Role Switcher
                 </span>
-                <span className="px-1.5 py-0.2 rounded bg-amber/20 border border-amber/40">Not Prod RBAC</span>
+                <span className="px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber/20 border border-amber-300 dark:border-amber/40 text-amber-900 dark:text-amber">Not Prod RBAC</span>
               </div>
-              <p className="text-[11px] text-text-muted mt-1 leading-relaxed">
+              <p className="text-[11px] text-slate-600 dark:text-text-muted mt-1 leading-relaxed">
                 Select an operational role to test persona-specific interfaces and record visibility.
               </p>
             </div>
@@ -123,19 +123,19 @@ export const DemoRoleSwitcher: React.FC<{ compact?: boolean }> = ({ compact = fa
                     onClick={() => handleRoleSelect(r.id, r.path)}
                     className={`w-full text-left p-2.5 rounded-lg border transition-all flex items-start gap-2.5 ${
                       isActive
-                        ? 'bg-cyan/15 border-cyan/50 text-cloud-white'
-                        : 'bg-midnight/40 border-transparent hover:bg-midnight hover:border-border text-text-secondary hover:text-cloud-white'
+                        ? 'bg-teal-50 dark:bg-cyan/15 border-teal-300 dark:border-cyan/50 text-teal-950 dark:text-cloud-white shadow-sm'
+                        : 'bg-transparent border-transparent hover:bg-slate-50 dark:hover:bg-midnight hover:border-slate-200 dark:hover:border-border text-slate-700 dark:text-text-secondary hover:text-slate-900 dark:hover:text-cloud-white'
                     }`}
                   >
-                    <div className="mt-0.5 p-1 rounded bg-deep-slate border border-border/60">
+                    <div className="mt-0.5 p-1 rounded bg-slate-100 dark:bg-deep-slate border border-slate-200 dark:border-border/60">
                       {r.icon}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-white">{r.label}</span>
-                        {isActive && <Check className="w-3.5 h-3.5 text-cyan shrink-0" />}
+                        <span className="text-xs font-bold text-slate-900 dark:text-white">{r.label}</span>
+                        {isActive && <Check className="w-3.5 h-3.5 text-teal-600 dark:text-cyan shrink-0" />}
                       </div>
-                      <p className="text-[10px] text-text-muted leading-tight mt-0.5 line-clamp-2">
+                      <p className="text-[10px] text-slate-500 dark:text-text-muted leading-tight mt-0.5 line-clamp-2">
                         {r.desc}
                       </p>
                     </div>
@@ -146,31 +146,31 @@ export const DemoRoleSwitcher: React.FC<{ compact?: boolean }> = ({ compact = fa
 
             {/* If role is partner, allow switching organization */}
             {role === 'partner' && (
-              <div className="p-3 bg-midnight/90 space-y-2">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-amber-300">
+              <div className="p-3 bg-slate-50 dark:bg-midnight/90 space-y-2 border-t border-slate-100 dark:border-border">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
                   Active Partner Organization:
                 </div>
                 <select
                   value={partnerOrg}
                   onChange={(e) => setPartnerOrg(e.target.value)}
-                  className="w-full text-xs p-2 rounded bg-deep-slate border border-border text-cloud-white outline-none cursor-pointer"
+                  className="w-full text-xs p-2 rounded bg-white dark:bg-deep-slate border border-slate-200 dark:border-border text-slate-800 dark:text-cloud-white outline-none cursor-pointer"
                 >
                   {partnerOrgs.map((org) => (
-                    <option key={org.id} value={org.name} className="bg-slate-900">
+                    <option key={org.id} value={org.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                       {org.name}
                     </option>
                   ))}
-                  <option value="Red Cross Disaster Fleet & Supplies" className="bg-slate-900">
+                  <option value="Red Cross Disaster Fleet & Supplies" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                     Red Cross Disaster Fleet & Supplies
                   </option>
-                  <option value="Hope Relief Foundation" className="bg-slate-900">
+                  <option value="Hope Relief Foundation" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                     Hope Relief Foundation
                   </option>
-                  <option value="State Disaster Response Force" className="bg-slate-900">
+                  <option value="State Disaster Response Force" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                     State Disaster Response Force
                   </option>
                 </select>
-                <p className="text-[10px] text-text-muted">
+                <p className="text-[10px] text-slate-500 dark:text-text-muted">
                   Record views in <code>/partner/*</code> will filter to match this organization only.
                 </p>
               </div>
@@ -181,24 +181,24 @@ export const DemoRoleSwitcher: React.FC<{ compact?: boolean }> = ({ compact = fa
 
       {/* Prototype Role Disclaimer Modal */}
       {showInfoModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-midnight/80 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl bg-deep-slate border border-amber/40 shadow-modal p-6 space-y-4 font-mono">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-midnight/80 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-deep-slate border border-amber-500/40 shadow-2xl p-6 space-y-4 font-mono text-slate-800 dark:text-cloud-white">
             <div className="flex items-start gap-3">
-              <div className="p-2 rounded-xl bg-amber/20 border border-amber/40 text-amber">
+              <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber/20 border border-amber-300 dark:border-amber/40 text-amber-800 dark:text-amber">
                 <ShieldAlert className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-base font-bold text-white">Prototype Role Simulation</h3>
-                <span className="text-[10px] text-amber uppercase font-semibold">Development-Only Demo Feature</span>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">Prototype Role Simulation</h3>
+                <span className="text-[10px] text-amber-700 dark:text-amber uppercase font-semibold">Development-Only Demo Feature</span>
               </div>
             </div>
 
-            <p className="text-xs text-text-secondary leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-text-secondary leading-relaxed">
               This client-side role switcher simulates role-based routing and interface scoping during early development and verification.
             </p>
 
-            <div className="p-3 rounded-xl bg-midnight border border-border text-xs text-text-muted space-y-2">
-              <strong className="text-cloud-white block text-[11px] uppercase tracking-wider">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-midnight border border-slate-200 dark:border-border text-xs text-slate-600 dark:text-text-muted space-y-2">
+              <strong className="text-slate-900 dark:text-cloud-white block text-[11px] uppercase tracking-wider">
                 Production RBAC Architectural Notice:
               </strong>
               <p>
@@ -210,7 +210,7 @@ export const DemoRoleSwitcher: React.FC<{ compact?: boolean }> = ({ compact = fa
               <button
                 type="button"
                 onClick={() => setShowInfoModal(false)}
-                className="px-4 py-2 rounded-lg bg-cyan text-midnight font-bold text-xs hover:bg-cyan/90 transition-colors"
+                className="px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white dark:bg-cyan dark:text-midnight font-bold text-xs transition-colors shadow-sm"
               >
                 Understood & Acknowledged
               </button>

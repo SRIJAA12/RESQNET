@@ -11,7 +11,7 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   RESQNET Core Theme System: White Theme (Default) & Dark Mode
+   RESQNET Core Theme System: Executive White Theme (Default) & Dark Mode
    ───────────────────────────────────────────────────────────────────────────── */
 
 /* Global smooth transition for theme switching */
@@ -40,9 +40,20 @@ html:not(.dark) {
   color-scheme: light;
 }
 
-/* Base Canvas & Backdrops */
+/* Base Canvas & Backdrops in Light Mode */
 html:not(.dark) .bg-midnight,
+html:not(.dark) .bg-midnight\/95,
+html:not(.dark) .bg-midnight\/90,
+html:not(.dark) .bg-midnight\/80,
+html:not(.dark) .bg-midnight\/70,
+html:not(.dark) .bg-midnight\/60,
+html:not(.dark) .bg-midnight\/50,
+html:not(.dark) .bg-midnight\/40,
+html:not(.dark) .bg-midnight\/30,
+html:not(.dark) .bg-midnight\/20,
+html:not(.dark) .bg-midnight\/10,
 html:not(.dark) .bg-slate-950,
+html:not(.dark) .bg-slate-950\/95,
 html:not(.dark) .bg-slate-950\/90,
 html:not(.dark) .bg-slate-950\/80,
 html:not(.dark) .bg-slate-950\/70,
@@ -50,9 +61,16 @@ html:not(.dark) .bg-slate-950\/50 {
   background-color: #F8FAFC !important;
 }
 
-/* Containers, Panels, Cards, Modals, Popovers */
+/* Containers, Panels, Cards, Modals, Popovers in Light Mode */
 html:not(.dark) .bg-surface,
+html:not(.dark) .bg-surface\/95,
+html:not(.dark) .bg-surface\/90,
+html:not(.dark) .bg-surface\/80,
+html:not(.dark) .bg-surface\/70,
+html:not(.dark) .bg-surface\/60,
+html:not(.dark) .bg-surface\/50,
 html:not(.dark) .bg-surfaceContainer,
+html:not(.dark) .bg-surfaceRaised,
 html:not(.dark) .bg-slate-900,
 html:not(.dark) .bg-slate-900\/95,
 html:not(.dark) .bg-slate-900\/90,
@@ -68,8 +86,14 @@ html:not(.dark) .bg-slate-850 {
   box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.05);
 }
 
-/* Raised Surfaces, Sub-panels, Chip Pills & Soft Backdrops */
+/* Raised Surfaces, Sub-panels, Chip Pills & Soft Backdrops in Light Mode */
 html:not(.dark) .bg-deep-slate,
+html:not(.dark) .bg-deep-slate\/95,
+html:not(.dark) .bg-deep-slate\/90,
+html:not(.dark) .bg-deep-slate\/80,
+html:not(.dark) .bg-deep-slate\/70,
+html:not(.dark) .bg-deep-slate\/60,
+html:not(.dark) .bg-deep-slate\/50,
 html:not(.dark) .bg-slate-800,
 html:not(.dark) .bg-slate-800\/90,
 html:not(.dark) .bg-slate-800\/80,
@@ -86,6 +110,8 @@ html:not(.dark) .border-border\/90,
 html:not(.dark) .border-border\/80,
 html:not(.dark) .border-border\/70,
 html:not(.dark) .border-border\/60,
+html:not(.dark) .border-border\/50,
+html:not(.dark) .border-border\/40,
 html:not(.dark) .border-slate-800,
 html:not(.dark) .border-slate-800\/80,
 html:not(.dark) .border-slate-800\/60,
@@ -100,8 +126,18 @@ html:not(.dark) .border-slate-700\/60 {
 
 /* Primary Text: High-contrast Slate-900 */
 html:not(.dark) .text-cloud-white,
-html:not(.dark) .text-white,
 html:not(.dark) .text-slate-100 {
+  color: #0F172A !important;
+}
+
+/* For non-button containers with text-white, switch to Slate-900 */
+html:not(.dark) div.text-white,
+html:not(.dark) p.text-white,
+html:not(.dark) h1.text-white,
+html:not(.dark) h2.text-white,
+html:not(.dark) h3.text-white,
+html:not(.dark) h4.text-white,
+html:not(.dark) span.text-white:not([class*="bg-"]):not(button *):not(a *) {
   color: #0F172A !important;
 }
 
@@ -121,6 +157,66 @@ html:not(.dark) .text-slate-400 {
 html:not(.dark) .text-text-muted,
 html:not(.dark) .text-slate-500 {
   color: #64748B !important;
+}
+
+/* High-contrast status colors in Light Mode */
+html:not(.dark) .text-coral,
+html:not(.dark) .text-emergency-500 {
+  color: #E11D48 !important;
+}
+
+html:not(.dark) .text-amber,
+html:not(.dark) .text-signalAmber {
+  color: #B45309 !important;
+}
+
+html:not(.dark) .text-cyan,
+html:not(.dark) .text-signalCyan {
+  color: #0F766E !important;
+}
+
+html:not(.dark) .text-success-green {
+  color: #047857 !important;
+}
+
+html:not(.dark) .text-info-blue {
+  color: #1D4ED8 !important;
+}
+
+/* High-contrast soft status badge backgrounds */
+html:not(.dark) .bg-coral\/15,
+html:not(.dark) .bg-coral\/20,
+html:not(.dark) .bg-coral\/10 {
+  background-color: #FFE4E6 !important;
+  color: #BE123C !important;
+}
+
+html:not(.dark) .bg-amber\/15,
+html:not(.dark) .bg-amber\/20,
+html:not(.dark) .bg-amber\/10 {
+  background-color: #FEF3C7 !important;
+  color: #92400E !important;
+}
+
+html:not(.dark) .bg-cyan\/15,
+html:not(.dark) .bg-cyan\/20,
+html:not(.dark) .bg-cyan\/10 {
+  background-color: #CCFBF1 !important;
+  color: #0F766E !important;
+}
+
+html:not(.dark) .bg-success-green\/15,
+html:not(.dark) .bg-success-green\/20,
+html:not(.dark) .bg-success-green\/10 {
+  background-color: #D1FAE5 !important;
+  color: #065F46 !important;
+}
+
+html:not(.dark) .bg-info-blue\/15,
+html:not(.dark) .bg-info-blue\/20,
+html:not(.dark) .bg-info-blue\/10 {
+  background-color: #DBEAFE !important;
+  color: #1E40AF !important;
 }
 
 /* Form Inputs, Selects, & Textareas in Light Mode */
@@ -162,20 +258,61 @@ html:not(.dark) .shadow-2xl {
   box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04) !important;
 }
 
-/* Brand Button Styling in Light Mode */
-html:not(.dark) .bg-cyan {
+/* ── Primary & Solid Action Buttons in Light Mode ──────────────────────────── */
+html:not(.dark) .bg-cyan:not(.badge):not(.text-cyan),
+html:not(.dark) button.bg-cyan,
+html:not(.dark) a.bg-cyan {
   background-color: #0D9488 !important;
   color: #FFFFFF !important;
 }
 
-html:not(.dark) .bg-cyan:hover,
-html:not(.dark) .hover\:bg-cyan\/90:hover {
-  background-color: #0F766E !important;
+html:not(.dark) .bg-cyan:not(.badge):not(.text-cyan) *,
+html:not(.dark) button.bg-cyan *,
+html:not(.dark) a.bg-cyan * {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
 }
 
-html:not(.dark) .text-cyan,
-html:not(.dark) .text-signalCyan {
-  color: #0D9488 !important;
+html:not(.dark) .bg-cyan:hover,
+html:not(.dark) .hover\:bg-cyan\/90:hover,
+html:not(.dark) button.bg-cyan:hover,
+html:not(.dark) a.bg-cyan:hover {
+  background-color: #0F766E !important;
+  color: #FFFFFF !important;
+}
+
+/* Solid Coral Action Buttons */
+html:not(.dark) .bg-coral:not(.badge):not(.text-coral),
+html:not(.dark) button.bg-coral,
+html:not(.dark) a.bg-coral {
+  background-color: #E11D48 !important;
+  color: #FFFFFF !important;
+}
+
+html:not(.dark) .bg-coral:not(.badge):not(.text-coral) *,
+html:not(.dark) button.bg-coral *,
+html:not(.dark) a.bg-coral * {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+/* Secondary Action Buttons in Light Mode */
+html:not(.dark) button.bg-deep-slate,
+html:not(.dark) a.bg-deep-slate,
+html:not(.dark) button.bg-midnight,
+html:not(.dark) a.bg-midnight {
+  background-color: #FFFFFF !important;
+  color: #1E293B !important;
+  border: 1px solid #CBD5E1 !important;
+}
+
+html:not(.dark) button.bg-deep-slate:hover,
+html:not(.dark) a.bg-deep-slate:hover,
+html:not(.dark) button.bg-midnight:hover,
+html:not(.dark) a.bg-midnight:hover {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+  border-color: #94A3B8 !important;
 }
 
 html:not(.dark) .border-cyan,

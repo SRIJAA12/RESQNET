@@ -232,8 +232,8 @@ export const AssignmentReviewPage: React.FC = () => {
       )}
 
       {/* Target Incident Selector */}
-      <div className="p-4 rounded-2xl bg-surfaceContainer border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
-        <label className="text-xs font-bold uppercase text-slate-400 font-mono">
+      <div className="p-4 rounded-2xl bg-white dark:bg-surfaceContainer border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+        <label className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 font-mono">
           Select Incident for Dispatch Review:
         </label>
         <select
@@ -243,10 +243,10 @@ export const AssignmentReviewPage: React.FC = () => {
             if (found) setSelectedIncident(found);
           }}
           aria-label="Select incident for dispatch review"
-          className="px-3.5 py-2 rounded-xl bg-midnight border border-slate-700 text-xs font-medium text-white outline-none focus:border-signalCyan font-mono max-w-xl truncate"
+          className="px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-midnight border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white outline-none focus:border-teal-600 dark:focus:border-signalCyan font-mono max-w-xl truncate"
         >
           {incidents.map((inc) => (
-            <option key={inc.id} value={inc.id}>
+            <option key={inc.id} value={inc.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
               {inc.reference_code} &mdash; [{inc.priority.toUpperCase()}] &mdash; {inc.status.toUpperCase()} &mdash; {inc.address_text}
             </option>
           ))}
@@ -256,11 +256,11 @@ export const AssignmentReviewPage: React.FC = () => {
       {selectedIncident && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Column: Target Incident Details & Needs Profile */}
-          <div className="p-6 rounded-3xl bg-surfaceContainer border border-slate-800 space-y-5 shadow-lg">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div className="p-6 rounded-3xl bg-white dark:bg-surfaceContainer border border-slate-200 dark:border-slate-800 space-y-5 shadow-sm text-slate-800 dark:text-cloud-white">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <div>
                 <span className="text-[10px] font-mono font-bold uppercase text-slate-400">Target Emergency Incident</span>
-                <div className="font-mono text-xl font-black text-signalCyan">
+                <div className="font-mono text-xl font-black text-teal-600 dark:text-signalCyan">
                   {selectedIncident.reference_code}
                 </div>
               </div>
@@ -272,18 +272,18 @@ export const AssignmentReviewPage: React.FC = () => {
 
             {/* Incident Status Alert */}
             {selectedIncident.status === 'assigned' || selectedIncident.status === 'in_progress' ? (
-              <div className="p-3.5 rounded-xl bg-amber-950/40 border border-amber-600/40 text-amber-200 text-xs flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+              <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-600/40 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <strong>Already Dispatched:</strong> This incident already has an active unit assigned. Proceeding will override the existing assignment.
                 </div>
               </div>
             ) : selectedIncident.status === 'submitted' || selectedIncident.status === 'under_review' ? (
-              <div className="p-3 rounded-xl bg-blue-950/40 border border-blue-600/40 text-blue-200 text-xs flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-600/40 text-blue-900 dark:text-blue-200 text-xs flex items-center justify-between">
                 <span>Incident is not yet verified.</span>
                 <Link
                   to={`/ops/incidents/${selectedIncident.id}`}
-                  className="font-bold underline text-blue-300 hover:text-white"
+                  className="font-bold underline text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-white"
                 >
                   Verify Incident First →
                 </Link>
@@ -291,24 +291,24 @@ export const AssignmentReviewPage: React.FC = () => {
             ) : null}
 
             {/* People & Trapped Summary */}
-            <div className="p-4 rounded-2xl bg-midnight border border-slate-800 space-y-2.5 text-xs">
-              <div className="flex items-center gap-2 text-slate-200">
-                <MapPin className="w-4 h-4 text-signalCyan shrink-0" />
-                <span className="font-medium text-white">{selectedIncident.address_text}</span>
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-midnight border border-slate-200 dark:border-slate-800 space-y-2.5 text-xs text-slate-700 dark:text-slate-300">
+              <div className="flex items-center gap-2 text-slate-900 dark:text-slate-200">
+                <MapPin className="w-4 h-4 text-teal-600 dark:text-signalCyan shrink-0" />
+                <span className="font-medium text-slate-900 dark:text-white">{selectedIncident.address_text}</span>
               </div>
-              <div className="text-[11px] font-mono text-slate-400">
+              <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
                 Coords: {selectedIncident.latitude.toFixed(4)}° N, {selectedIncident.longitude.toFixed(4)}° E
               </div>
 
-              <div className="flex items-center gap-4 text-slate-300 pt-1 border-t border-slate-800/80">
+              <div className="flex items-center gap-4 text-slate-600 dark:text-slate-300 pt-1 border-t border-slate-200 dark:border-slate-800/80">
                 <span className="flex items-center gap-1 font-medium">
-                  <Users className="w-3.5 h-3.5 text-slate-400" /> {selectedIncident.people_count} individuals
+                  <Users className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" /> {selectedIncident.people_count} individuals
                 </span>
                 {selectedIncident.trapped_count > 0 && (
-                  <span className="text-red-400 font-bold">{selectedIncident.trapped_count} trapped</span>
+                  <span className="text-rose-600 dark:text-red-400 font-bold">{selectedIncident.trapped_count} trapped</span>
                 )}
                 {selectedIncident.medical_assistance_needed && (
-                  <span className="text-red-400 font-bold flex items-center gap-1">
+                  <span className="text-rose-600 dark:text-red-400 font-bold flex items-center gap-1">
                     <HeartPulse className="w-3.5 h-3.5" /> Medical Urgent
                   </span>
                 )}
@@ -347,13 +347,13 @@ export const AssignmentReviewPage: React.FC = () => {
           </div>
 
           {/* Right Column: Fleet Selection & Confirmation Form */}
-          <div className="p-6 rounded-3xl bg-surfaceContainer border border-slate-800 flex flex-col justify-between space-y-5 shadow-lg">
+          <div className="p-6 rounded-3xl bg-white dark:bg-surfaceContainer border border-slate-200 dark:border-slate-800 flex flex-col justify-between space-y-5 shadow-sm text-slate-800 dark:text-cloud-white">
             <div className="space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                <h2 className="text-xs font-bold uppercase text-slate-300 tracking-wider font-mono">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                <h2 className="text-xs font-bold uppercase text-slate-700 dark:text-slate-300 tracking-wider font-mono">
                   Candidate Fleet Resources ({resources.length})
                 </h2>
-                <span className="text-[11px] text-slate-400">Sorted by grid distance</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">Sorted by grid distance</span>
               </div>
 
               {/* Resource Candidates List */}
@@ -378,10 +378,10 @@ export const AssignmentReviewPage: React.FC = () => {
                       }}
                       className={`p-3.5 rounded-2xl border transition-all ${
                         isSelected
-                          ? 'bg-cyan/15 border-cyan shadow-md shadow-cyan/20 ring-1 ring-cyan cursor-pointer'
+                          ? 'bg-teal-50 dark:bg-cyan/15 border-teal-500 dark:border-cyan shadow-md shadow-teal-500/10 ring-1 ring-teal-500 dark:ring-cyan cursor-pointer'
                           : isAvailable
-                          ? 'bg-midnight border-slate-800 hover:border-slate-700 hover:bg-slate-900/60 cursor-pointer'
-                          : 'bg-midnight/40 border-slate-900 opacity-60 cursor-not-allowed'
+                          ? 'bg-white dark:bg-midnight border-slate-200 dark:border-slate-800 hover:border-teal-400 hover:bg-slate-50 dark:hover:bg-slate-900/60 cursor-pointer shadow-sm'
+                          : 'bg-slate-50 dark:bg-midnight/40 border-slate-100 dark:border-slate-900 opacity-60 cursor-not-allowed'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -389,23 +389,23 @@ export const AssignmentReviewPage: React.FC = () => {
                           <div
                             className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 transition-all flex-shrink-0 ${
                               isSelected
-                                ? 'border-cyan bg-cyan text-midnight font-bold shadow-sm'
+                                ? 'border-teal-600 bg-teal-600 dark:border-cyan dark:bg-cyan text-white dark:text-midnight font-bold shadow-sm'
                                 : isAvailable
-                                ? 'border-slate-500 bg-midnight hover:border-cyan/50'
-                                : 'border-slate-800 bg-slate-900'
+                                ? 'border-slate-400 dark:border-slate-500 bg-white dark:bg-midnight hover:border-teal-500'
+                                : 'border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900'
                             }`}
                           >
-                            {isSelected && <Check className="w-3 h-3 stroke-[3] text-midnight" />}
+                            {isSelected && <Check className="w-3 h-3 stroke-[3] text-white dark:text-midnight" />}
                           </div>
                           <div>
-                            <span className={`font-bold text-xs block ${isSelected ? 'text-cyan' : 'text-white'}`}>
+                            <span className={`font-bold text-xs block ${isSelected ? 'text-teal-800 dark:text-cyan' : 'text-slate-900 dark:text-white'}`}>
                               {resource.name}
                             </span>
-                            <span className="text-[11px] text-slate-400 capitalize">
+                            <span className="text-[11px] text-slate-500 dark:text-slate-400 capitalize">
                               {resource.resource_type.replace('_', ' ')} &bull; Capacity: {resource.passenger_capacity} seats &bull; Crew: {resource.crew_count}
                             </span>
                             {resource.responder_lead_name && (
-                              <span className="text-[10px] text-slate-500 block mt-0.5">
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 block mt-0.5">
                                 Lead: {resource.responder_lead_name}
                               </span>
                             )}
@@ -414,7 +414,7 @@ export const AssignmentReviewPage: React.FC = () => {
 
                         <div className="text-right flex-shrink-0">
                           <StatusBadge type="resource" value={resource.status} size="sm" />
-                          <span className="text-[11px] font-mono text-slate-400 block mt-1">
+                          <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 block mt-1">
                             ~{dist} km away
                           </span>
                         </div>
@@ -425,9 +425,9 @@ export const AssignmentReviewPage: React.FC = () => {
               </div>
 
               {/* Dispatcher Notes Form */}
-              <form onSubmit={handleAssign} className="space-y-3 pt-2 border-t border-slate-800">
+              <form onSubmit={handleAssign} className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1 font-mono">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 font-mono">
                     Dispatcher Mission Instructions / Notes:
                   </label>
                   <textarea
@@ -435,17 +435,17 @@ export const AssignmentReviewPage: React.FC = () => {
                     value={dispatcherNotes}
                     onChange={(e) => setDispatcherNotes(e.target.value)}
                     placeholder="Enter instructions for rescue craft team lead..."
-                    className="w-full px-3 py-2 rounded-xl bg-midnight border border-slate-700 text-xs text-white placeholder-slate-500 outline-none focus:border-cyan resize-none"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-midnight border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-teal-600 dark:focus:border-cyan resize-none"
                   />
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-slate-300">
+                <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
                   <input
                     type="checkbox"
                     id="autoDispatch"
                     checked={autoDispatch}
                     onChange={(e) => setAutoDispatch(e.target.checked)}
-                    className="w-4 h-4 rounded text-cyan bg-midnight border-slate-700"
+                    className="w-4 h-4 rounded text-teal-600 bg-white dark:bg-midnight border-slate-300 dark:border-slate-700"
                   />
                   <label htmlFor="autoDispatch" className="cursor-pointer select-none">
                     Issue immediate mission orders (transition incident to <strong>IN_PROGRESS</strong>)
@@ -455,7 +455,7 @@ export const AssignmentReviewPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={submitting || !selectedResourceId || (selectedResource?.status || '').toLowerCase() !== 'available'}
-                  className="w-full py-3.5 px-4 rounded-xl bg-cyan hover:bg-cyan/90 disabled:opacity-40 disabled:cursor-not-allowed text-midnight font-black text-sm shadow-xl shadow-cyan/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  className="w-full py-3.5 px-4 rounded-xl bg-teal-600 hover:bg-teal-700 text-white dark:bg-cyan dark:hover:bg-cyan/90 dark:text-midnight disabled:opacity-40 disabled:cursor-not-allowed font-black text-sm shadow-xl shadow-teal-600/20 dark:shadow-cyan/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
                   <FileCheck2 className="w-4 h-4" />
                   {submitting

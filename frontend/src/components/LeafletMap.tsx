@@ -170,16 +170,16 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     : [28.5800, 77.2300];
 
   return (
-    <div className={`relative w-full ${heightClass} rounded-panel overflow-hidden border border-border bg-midnight shadow-card`}>
+    <div className={`relative w-full ${heightClass} rounded-panel overflow-hidden border border-slate-200 dark:border-border bg-slate-50 dark:bg-midnight shadow-card`}>
       {/* Map Layer Switcher Control */}
-      <div className="absolute top-3 right-3 z-[1000] bg-deep-slate/90 backdrop-blur-md border border-border/80 rounded-lg p-1 flex items-center gap-1 shadow-lg">
+      <div className="absolute top-3 right-3 z-[1000] bg-white/95 dark:bg-deep-slate/90 backdrop-blur-md border border-slate-200 dark:border-border/80 rounded-lg p-1 flex items-center gap-1 shadow-md">
         <button
           type="button"
           onClick={() => setMapTheme('tactical-dark')}
           className={`px-2.5 py-1 text-xs font-medium rounded transition-all ${
             mapTheme === 'tactical-dark'
-              ? 'bg-cyan text-midnight font-semibold shadow-sm'
-              : 'text-text-secondary hover:text-cloud-white hover:bg-slate/50'
+              ? 'bg-teal-600 dark:bg-cyan text-white dark:text-midnight font-semibold shadow-sm'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-text-secondary dark:hover:text-cloud-white dark:hover:bg-slate/50'
           }`}
         >
           Tactical Dark
@@ -189,8 +189,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           onClick={() => setMapTheme('satellite')}
           className={`px-2.5 py-1 text-xs font-medium rounded transition-all ${
             mapTheme === 'satellite'
-              ? 'bg-cyan text-midnight font-semibold shadow-sm'
-              : 'text-text-secondary hover:text-cloud-white hover:bg-slate/50'
+              ? 'bg-teal-600 dark:bg-cyan text-white dark:text-midnight font-semibold shadow-sm'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-text-secondary dark:hover:text-cloud-white dark:hover:bg-slate/50'
           }`}
         >
           Satellite
@@ -200,8 +200,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           onClick={() => setMapTheme('street')}
           className={`px-2.5 py-1 text-xs font-medium rounded transition-all ${
             mapTheme === 'street'
-              ? 'bg-cyan text-midnight font-semibold shadow-sm'
-              : 'text-text-secondary hover:text-cloud-white hover:bg-slate/50'
+              ? 'bg-teal-600 dark:bg-cyan text-white dark:text-midnight font-semibold shadow-sm'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-text-secondary dark:hover:text-cloud-white dark:hover:bg-slate/50'
           }`}
         >
           Streets
@@ -210,14 +210,14 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
       {/* Offline / Tile Notice if external tiles fail */}
       {tileError && (
-        <div className="absolute top-12 left-3 right-3 z-20 bg-deep-slate/95 border border-border text-text-secondary px-3 py-2 rounded-control text-xs flex items-center justify-between backdrop-blur-md">
+        <div className="absolute top-12 left-3 right-3 z-20 bg-white/95 dark:bg-deep-slate/95 border border-slate-200 dark:border-border text-slate-700 dark:text-text-secondary px-3 py-2 rounded-control text-xs flex items-center justify-between backdrop-blur-md shadow-lg">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-amber" />
             <span>Map tile server offline. Tactical coordinates remain fully active.</span>
           </div>
           <button
             onClick={() => setTileError(false)}
-            className="text-cyan underline text-xs font-medium hover:text-cloud-white"
+            className="text-teal-600 dark:text-cyan underline text-xs font-medium hover:text-slate-900 dark:hover:text-cloud-white"
           >
             Retry
           </button>
