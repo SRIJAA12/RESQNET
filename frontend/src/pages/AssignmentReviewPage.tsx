@@ -316,31 +316,31 @@ export const AssignmentReviewPage: React.FC = () => {
             </div>
 
             {/* Citizen Description */}
-            <div className="space-y-1">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider font-mono">
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-400 uppercase tracking-wider font-mono">
                 Field Narrative:
               </span>
-              <p className="text-xs text-slate-200 bg-midnight p-3.5 rounded-xl border border-slate-800 leading-relaxed font-sans">
+              <p className="text-xs text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-midnight/60 p-4 rounded-xl border-l-4 border-l-teal-600 border border-slate-200 dark:border-slate-800 leading-relaxed font-sans shadow-2xs">
                 "{selectedIncident.description}"
               </p>
             </div>
 
             {/* Assistive AI Triage Guidance */}
-            <div className="p-4 rounded-2xl bg-purple-950/30 border border-purple-500/30 text-xs text-purple-200 space-y-2">
-              <div className="flex items-center justify-between font-bold text-purple-300">
+            <div className="p-4 rounded-2xl bg-purple-50/90 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-500/30 text-xs text-purple-950 dark:text-purple-200 space-y-2.5 shadow-2xs">
+              <div className="flex items-center justify-between font-bold text-purple-900 dark:text-purple-300">
                 <span className="flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-purple-400" />
+                  <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   AI Triage Guidance
                 </span>
-                <span className="font-mono">
+                <span className="font-mono px-2.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-200 text-xs font-bold border border-purple-200 dark:border-purple-700/50">
                   {selectedIncident.ai_triage_score ? `${selectedIncident.ai_triage_score.toFixed(0)} / 100` : 'Assisted'}
                 </span>
               </div>
-              <p className="text-[11px] text-purple-300/90 leading-relaxed">
+              <p className="text-[11px] text-purple-900/90 dark:text-purple-300/90 leading-relaxed font-medium">
                 {selectedIncident.ai_recommendation_notes ||
                   'Shallow-water rescue craft recommended due to rising flood conditions.'}
               </p>
-              <div className="text-[10px] text-slate-400 italic">
+              <div className="text-[10px] text-purple-700/80 dark:text-slate-400 italic">
                 * Autonomous dispatch disabled. Dispatcher confirmation required for fleet deployment.
               </div>
             </div>

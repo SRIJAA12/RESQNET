@@ -348,20 +348,20 @@ export const IncidentDetailPage: React.FC = () => {
 
       {/* ── 3. Reported Situation & Contact Details ───────────────────────────── */}
       <div className="p-5 rounded-card bg-surface border border-border/80 space-y-3">
-        <span className="text-[11px] font-medium text-text-muted uppercase tracking-wider block">
+        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider block font-mono">
           Citizen Reported Description
         </span>
-        <p className="text-xs sm:text-sm text-text-secondary leading-relaxed p-4 rounded-card bg-midnight/60 border border-border/60">
+        <p className="text-xs sm:text-sm text-slate-800 dark:text-text-secondary leading-relaxed p-4 rounded-xl bg-slate-50 dark:bg-midnight/60 border-l-4 border-l-teal-600 border border-slate-200 dark:border-border/60 shadow-2xs">
           "{incident.description}"
         </p>
         <div className="flex flex-wrap items-center justify-between text-xs text-text-muted pt-1">
           <span className="flex items-center gap-1.5">
-            <User className="w-3.5 h-3.5" />
-            Reporter: <strong className="text-cloud-white">{incident.reporter_name}</strong>
+            <User className="w-3.5 h-3.5 text-teal-600 dark:text-cyan" />
+            Reporter: <strong className="text-slate-900 dark:text-cloud-white">{incident.reporter_name}</strong>
           </span>
           <span className="flex items-center gap-1.5">
-            <Phone className="w-3.5 h-3.5" />
-            Contact: <span className="font-mono text-cloud-white">{incident.reporter_contact}</span>
+            <Phone className="w-3.5 h-3.5 text-teal-600 dark:text-cyan" />
+            Contact: <span className="font-mono text-slate-900 dark:text-cloud-white font-medium">{incident.reporter_contact}</span>
           </span>
         </div>
       </div>
@@ -369,28 +369,28 @@ export const IncidentDetailPage: React.FC = () => {
       {/* ── 4. Verification & Triage Evaluation ─────────────────────────────────── */}
       <div className="p-5 rounded-card bg-surface border border-border/80 space-y-3">
         <div className="flex items-center justify-between border-b border-border/60 pb-2">
-          <span className="text-[11px] font-medium text-text-muted uppercase tracking-wider">
+          <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider font-mono">
             Triage & Operational Evaluation
           </span>
           {incident.ai_triage_score && (
-            <span className="inline-flex items-center gap-1 text-xs text-purple-300 font-medium">
-              <Sparkles className="w-3.5 h-3.5 text-purple-400" /> AI Priority: {incident.ai_triage_score.toFixed(0)}/100
+            <span className="inline-flex items-center gap-1.5 text-xs text-purple-700 dark:text-purple-300 font-semibold px-2.5 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800/40">
+              <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" /> AI Priority: {incident.ai_triage_score.toFixed(0)}/100
             </span>
           )}
         </div>
 
         {incident.ai_recommendation_notes && (
-          <p className="text-xs text-purple-200/90 leading-relaxed bg-purple-950/20 border border-purple-800/30 p-3 rounded-control">
+          <p className="text-xs text-purple-950 dark:text-purple-200 leading-relaxed bg-purple-50/90 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/40 p-3.5 rounded-xl font-medium shadow-2xs">
             {incident.ai_recommendation_notes}
           </p>
         )}
 
         {incident.status_history && incident.status_history.length > 0 ? (
-          <div className="text-xs text-text-secondary bg-midnight/50 p-3 rounded-control border border-border/60 flex items-start gap-2">
-            <ShieldCheck className="w-4 h-4 text-cyan shrink-0 mt-0.5" />
+          <div className="text-xs text-slate-800 dark:text-text-secondary bg-slate-50 dark:bg-midnight/50 p-3.5 rounded-xl border border-slate-200 dark:border-border/60 flex items-start gap-2.5">
+            <ShieldCheck className="w-4 h-4 text-teal-600 dark:text-cyan shrink-0 mt-0.5" />
             <div>
-              <span className="font-medium text-cloud-white block">Audit & Verification Record:</span>
-              <span>{incident.status_history[incident.status_history.length - 1].notes || 'Status verified by operator.'}</span>
+              <span className="font-semibold text-slate-900 dark:text-cloud-white block mb-0.5">Audit & Verification Record:</span>
+              <span className="text-slate-600 dark:text-text-secondary">{incident.status_history[incident.status_history.length - 1].notes || 'Status verified by operator.'}</span>
             </div>
           </div>
         ) : (
@@ -403,25 +403,25 @@ export const IncidentDetailPage: React.FC = () => {
       {/* ── 5. Assignment & Response Progress ──────────────────────────────────── */}
       <div className="p-5 rounded-card bg-surface border border-border/80 space-y-3">
         <div className="flex items-center justify-between border-b border-border/60 pb-2">
-          <span className="text-[11px] font-medium text-text-muted uppercase tracking-wider">
+          <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider font-mono">
             Assignment & Field Unit Status
           </span>
-          <Truck className="w-4 h-4 text-cyan" />
+          <Truck className="w-4 h-4 text-teal-600 dark:text-cyan" />
         </div>
 
         {incident.status === 'assigned' || incident.status === 'in_progress' ? (
-          <div className="p-3.5 rounded-card bg-midnight/60 border border-border/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="p-3.5 rounded-card bg-slate-50 dark:bg-midnight/60 border border-slate-200 dark:border-border/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
             <div>
-              <span className="font-heading font-semibold text-cloud-white text-sm block">
+              <span className="font-heading font-semibold text-slate-900 dark:text-cloud-white text-sm block">
                 Resource Assigned & Deployed
               </span>
-              <span className="text-cyan text-xs">
+              <span className="text-teal-700 dark:text-cyan text-xs font-medium">
                 Status: {incident.status === 'in_progress' ? 'Unit On Site' : 'Unit En Route'}
               </span>
             </div>
             <Link
               to="/ops/resources"
-              className="text-xs text-cyan hover:underline flex items-center gap-1 font-medium"
+              className="text-xs text-teal-700 dark:text-cyan hover:underline flex items-center gap-1 font-semibold"
             >
               View fleet resources <ChevronRight className="w-3.5 h-3.5" />
             </Link>
@@ -467,18 +467,18 @@ export const IncidentDetailPage: React.FC = () => {
                 onChange={(e) => setNoteInput(e.target.value)}
                 placeholder="Add timestamped operational update or field SITREP..."
                 rows={2}
-                className="w-full p-3 rounded-control bg-midnight border border-border/80 focus:border-cyan text-xs text-cloud-white placeholder-text-muted outline-none transition-all resize-none"
+                className="w-full p-3 rounded-control bg-white dark:bg-midnight border border-slate-200 dark:border-border/80 focus:border-teal-600 dark:focus:border-cyan text-xs text-slate-900 dark:text-cloud-white placeholder-slate-400 dark:placeholder-text-muted outline-none transition-all resize-none shadow-2xs"
               />
               <div className="flex items-center justify-between">
                 {noteSuccess && (
-                  <span className="text-xs text-success-green flex items-center gap-1">
+                  <span className="text-xs text-emerald-600 dark:text-success-green flex items-center gap-1 font-medium">
                     <CheckCircle2 className="w-3.5 h-3.5" /> Note saved to ledger
                   </span>
                 )}
                 <button
                   type="submit"
                   disabled={!noteInput.trim() || actionLoading}
-                  className="ml-auto px-4 py-1.5 rounded-control bg-deep-slate hover:bg-border text-xs text-cloud-white font-medium disabled:opacity-50 transition-colors"
+                  className="ml-auto px-4 py-1.5 rounded-control bg-teal-600 hover:bg-teal-700 text-white dark:bg-deep-slate dark:hover:bg-border text-xs font-semibold disabled:opacity-50 transition-colors shadow-2xs"
                 >
                   Save note
                 </button>

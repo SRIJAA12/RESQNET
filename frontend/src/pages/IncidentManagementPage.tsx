@@ -130,10 +130,10 @@ export const IncidentManagementPage: React.FC = () => {
           <div className="flex flex-wrap items-center gap-1.5">
             <button
               onClick={() => setStatusFilter('all')}
-              className={`px-3 py-1.5 rounded-control text-xs font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-control text-xs transition-colors ${
                 statusFilter === 'all'
-                  ? 'bg-cyan text-midnight font-semibold'
-                  : 'bg-deep-slate text-text-secondary hover:text-cloud-white border border-border/60'
+                  ? 'bg-teal-600 dark:bg-cyan text-white dark:text-midnight font-bold shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-deep-slate dark:text-text-secondary dark:hover:text-cloud-white border border-slate-200 dark:border-border/60 font-medium'
               }`}
             >
               All ({incidents.length})
@@ -141,10 +141,10 @@ export const IncidentManagementPage: React.FC = () => {
 
             <button
               onClick={() => setStatusFilter('needs_review')}
-              className={`px-3 py-1.5 rounded-control text-xs font-medium transition-colors flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-control text-xs transition-colors flex items-center gap-1.5 ${
                 statusFilter === 'needs_review'
-                  ? 'bg-amber text-midnight font-semibold'
-                  : 'bg-deep-slate text-amber hover:text-cloud-white border border-border/60'
+                  ? 'bg-amber-600 dark:bg-amber text-white dark:text-midnight font-bold shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-amber-700 dark:text-amber dark:hover:text-cloud-white border border-slate-200 dark:border-border/60 font-medium'
               }`}
             >
               Needs review ({countNeedsReview})
@@ -152,10 +152,10 @@ export const IncidentManagementPage: React.FC = () => {
 
             <button
               onClick={() => setStatusFilter('verified')}
-              className={`px-3 py-1.5 rounded-control text-xs font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-control text-xs transition-colors ${
                 statusFilter === 'verified'
-                  ? 'bg-info-blue text-midnight font-semibold'
-                  : 'bg-deep-slate text-info-blue hover:text-cloud-white border border-border/60'
+                  ? 'bg-blue-600 dark:bg-info-blue text-white dark:text-midnight font-bold shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-blue-700 dark:text-info-blue dark:hover:text-cloud-white border border-slate-200 dark:border-border/60 font-medium'
               }`}
             >
               Verified ({countVerified})
@@ -163,10 +163,10 @@ export const IncidentManagementPage: React.FC = () => {
 
             <button
               onClick={() => setStatusFilter('assigned')}
-              className={`px-3 py-1.5 rounded-control text-xs font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-control text-xs transition-colors ${
                 statusFilter === 'assigned'
-                  ? 'bg-cyan text-midnight font-semibold'
-                  : 'bg-deep-slate text-cyan hover:text-cloud-white border border-border/60'
+                  ? 'bg-teal-600 dark:bg-cyan text-white dark:text-midnight font-bold shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-teal-700 dark:text-cyan dark:hover:text-cloud-white border border-slate-200 dark:border-border/60 font-medium'
               }`}
             >
               Assigned ({countAssigned})
@@ -174,10 +174,10 @@ export const IncidentManagementPage: React.FC = () => {
 
             <button
               onClick={() => setStatusFilter('resolved')}
-              className={`px-3 py-1.5 rounded-control text-xs font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-control text-xs transition-colors ${
                 statusFilter === 'resolved'
-                  ? 'bg-success-green text-midnight font-semibold'
-                  : 'bg-deep-slate text-success-green hover:text-cloud-white border border-border/60'
+                  ? 'bg-emerald-600 dark:bg-success-green text-white dark:text-midnight font-bold shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-emerald-700 dark:text-success-green dark:hover:text-cloud-white border border-slate-200 dark:border-border/60 font-medium'
               }`}
             >
               Resolved ({countResolved})
@@ -186,11 +186,11 @@ export const IncidentManagementPage: React.FC = () => {
 
           {/* Priority filter */}
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-text-muted">Priority:</span>
+            <span className="text-slate-600 dark:text-text-muted font-medium">Priority:</span>
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="bg-midnight border border-border/80 text-cloud-white text-xs px-2.5 py-1.5 rounded-control outline-none cursor-pointer"
+              className="bg-white dark:bg-midnight border border-slate-200 dark:border-border/80 text-slate-800 dark:text-cloud-white text-xs px-2.5 py-1.5 rounded-control outline-none cursor-pointer focus:border-teal-600 dark:focus:border-cyan shadow-2xs font-medium"
             >
               <option value="all">All priorities</option>
               <option value="critical">Critical</option>
@@ -203,18 +203,18 @@ export const IncidentManagementPage: React.FC = () => {
 
         {/* Search Input */}
         <div className="relative">
-          <Search className="w-4 h-4 text-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 dark:text-text-muted absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Filter by reference code, sector address, or reporter..."
-            className="w-full pl-9 pr-8 py-2 rounded-control bg-midnight border border-border/80 focus:border-cyan text-xs text-cloud-white placeholder-text-muted outline-none transition-all"
+            className="w-full pl-9 pr-8 py-2 rounded-control bg-white dark:bg-midnight border border-slate-200 dark:border-border/80 focus:border-teal-600 dark:focus:border-cyan text-xs text-slate-900 dark:text-cloud-white placeholder-slate-400 dark:placeholder-text-muted outline-none transition-all shadow-2xs"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-cloud-white"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-text-muted hover:text-slate-700 dark:hover:text-cloud-white"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -226,7 +226,7 @@ export const IncidentManagementPage: React.FC = () => {
       <div className="rounded-panel bg-surface border border-border/80 overflow-hidden shadow-card">
         {loading ? (
           <div className="py-20 text-center text-xs text-text-muted">
-            <RefreshCw className="w-5 h-5 text-cyan animate-spin mx-auto mb-2" />
+            <RefreshCw className="w-5 h-5 text-teal-600 dark:text-cyan animate-spin mx-auto mb-2" />
             Loading incident records...
           </div>
         ) : filteredIncidents.length === 0 ? (
@@ -238,7 +238,7 @@ export const IncidentManagementPage: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-border/70 text-text-muted font-sans font-medium text-[11px] bg-deep-slate/40">
+                <tr className="border-b border-slate-200 dark:border-border/70 text-slate-700 dark:text-text-muted font-sans font-bold text-[11px] uppercase tracking-wider bg-slate-50 dark:bg-deep-slate/40">
                   <th className="py-3 px-4">Reference</th>
                   <th className="py-3 px-4">Location & description</th>
                   <th className="py-3 px-4">Severity</th>
@@ -252,7 +252,7 @@ export const IncidentManagementPage: React.FC = () => {
                 {filteredIncidents.map((inc) => (
                   <tr
                     key={inc.id}
-                    className="hover:bg-deep-slate/50 transition-colors group"
+                    className="hover:bg-slate-50 dark:hover:bg-deep-slate/50 transition-colors group"
                   >
                     {/* Reference */}
                     <td className="py-3.5 px-4 font-mono font-bold text-cyan">

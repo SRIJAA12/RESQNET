@@ -373,6 +373,57 @@ html:not(.dark) ::-webkit-scrollbar-thumb:hover {
   background: #94A3B8;
 }
 
+/* Table Headers in Light Mode: Crisp Slate-50 with Slate-700 tracked labels */
+html:not(.dark) thead,
+html:not(.dark) thead tr,
+html:not(.dark) thead th,
+html:not(.dark) th {
+  background-color: #F8FAFC !important;
+  color: #334155 !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+}
+
+html:not(.dark) thead tr[class*="bg-"],
+html:not(.dark) thead th[class*="bg-"] {
+  background-color: #F8FAFC !important;
+  color: #334155 !important;
+}
+
+/* Table row styling */
+html:not(.dark) tbody tr:hover,
+html:not(.dark) tbody tr[class*="hover:bg-"]:hover {
+  background-color: #F8FAFC !important;
+}
+
+/* AI Triage & Assessment Cards in Light Mode */
+html:not(.dark) [class*="bg-purple-950"] {
+  background-color: #FAF5FF !important; /* soft violet-50 */
+  border-color: #DDD6FE !important; /* violet-200 */
+}
+
+html:not(.dark) [class*="bg-purple-950"] .text-purple-200,
+html:not(.dark) [class*="bg-purple-950"] .text-purple-200\/90,
+html:not(.dark) [class*="bg-purple-950"] .text-purple-300,
+html:not(.dark) [class*="bg-purple-950"] .text-purple-300\/90,
+html:not(.dark) [class*="bg-purple-950"] p,
+html:not(.dark) [class*="bg-purple-950"] span {
+  color: #4C1D95 !important; /* rich deep violet */
+}
+
+html:not(.dark) [class*="bg-purple-950"] svg,
+html:not(.dark) [class*="text-purple-400"] {
+  color: #7C3AED !important;
+  stroke: #7C3AED !important;
+}
+
+html:not(.dark) [class*="bg-purple-950"] .font-mono {
+  background-color: #EDE9FE !important;
+  color: #5B21B6 !important;
+  border-radius: 9999px;
+  padding: 2px 8px;
+  font-weight: 700;
+}
+
 /* ── 2. DARK THEME SPECIFICS (When .dark is present) ── */
 html.dark {
   color-scheme: dark;
