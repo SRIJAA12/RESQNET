@@ -19,7 +19,6 @@ import {
   ChevronRight,
   ChevronLeft,
   X,
-  ShieldAlert,
 } from 'lucide-react';
 
 export interface SidebarProps {
@@ -299,20 +298,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
           {primaryNav.map(renderNavItem)}
-
-          {/* Dedicated Citizen SOS Button */}
-          <div className="pt-2 px-1">
-            <Link
-              to="/request-assistance"
-              className={`flex items-center gap-2 px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs transition-all active:scale-95 ${
-                collapsed ? 'justify-center px-1' : ''
-              }`}
-              title="Launch Public Citizen Emergency SOS Request Portal"
-            >
-              <ShieldAlert className="w-4 h-4 text-white shrink-0 animate-pulse" />
-              {!collapsed && <span className="font-heading tracking-wide">Emergency SOS</span>}
-            </Link>
-          </div>
         </div>
 
         {/* Secondary Navigation ("Manage & Admin") */}

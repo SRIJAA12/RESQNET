@@ -215,17 +215,6 @@ export const OpsLayout: React.FC = () => {
 
             {/* Right: Search, Notifications, Theme Toggle & User Menu */}
             <div className="flex items-center gap-2 shrink-0">
-              {/* Emergency SOS Launch Button */}
-              <Link
-                to="/request-assistance"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-control bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs hover:shadow-sm transition-all active:scale-95"
-                title="Public Citizen Emergency SOS Request Portal"
-              >
-                <ShieldAlert className="w-3.5 h-3.5 animate-pulse text-white" />
-                <span className="hidden sm:inline font-heading tracking-wide">Emergency SOS</span>
-                <span className="sm:hidden font-heading font-extrabold">SOS</span>
-              </Link>
-
               {/* Quick Search Button */}
               <button
                 onClick={() => setSearchOpen(true)}
