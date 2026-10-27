@@ -22,7 +22,19 @@ import {
   OpsSettings,
 } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+const getApiBase = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (!envUrl) {
+    return 'http://localhost:8001/api';
+  }
+  const clean = envUrl.replace(/\/+$/, '');
+  if (clean.includes(':8000')) {
+    return clean.replace(':8000', ':8001').replace(/\/api$/, '') + '/api';
+  }
+  return clean.endsWith('/api') ? clean : `${clean}/api`;
+};
+
+const API_BASE = getApiBase();
 
 // Realistic Fallback Data for offline / simulated local preview
 const FALLBACK_INCIDENTS: Incident[] = [
