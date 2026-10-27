@@ -24,6 +24,7 @@ import { DistributionWorkflowPage } from './pages/DistributionWorkflowPage';
 import { UnservedNeedsPage } from './pages/UnservedNeedsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { RoleProvider } from './context/RoleContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { ResponderLayout } from './layouts/ResponderLayout';
 import { PartnerLayout } from './layouts/PartnerLayout';
 
@@ -48,7 +49,8 @@ import { SettingsAdminPage } from './pages/SettingsAdminPage';
 
 export const App: React.FC = () => {
   return (
-    <RoleProvider>
+    <ThemeProvider>
+      <RoleProvider>
       <BrowserRouter>
         <Routes>
           {/* ── 1. Public Citizen Routes (Light Public Theme Layout) ── */}
@@ -157,6 +159,7 @@ export const App: React.FC = () => {
         </Routes>
       </BrowserRouter>
     </RoleProvider>
+    </ThemeProvider>
   );
 };
 

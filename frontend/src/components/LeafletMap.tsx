@@ -5,6 +5,7 @@ import { Incident, Resource, Shelter } from '../types';
 import { StatusBadge } from './StatusBadge';
 import { Link } from 'react-router-dom';
 import { ChevronRight, HeartPulse, Users, AlertTriangle, Layers } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 type MapTheme = 'tactical-dark' | 'satellite' | 'street';
 
@@ -156,8 +157,13 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   heightClass = 'h-[500px]',
   showFloodOverlay = true,
 }) => {
+  const { theme } = useTheme();
   const [tileError, setTileError] = useState(false);
-  const [mapTheme, setMapTheme] = useState<MapTheme>('tactical-dark');
+  const [mapTheme, setMapTheme] = useState<MapTheme>(() => (theme === 'dark' ? 'tactical-dark' : 'street'));
+
+  useEffect(() => {
+    setMapTheme(theme === 'dark' ? 'tactical-dark' : 'street');
+  }, [theme]);
 
   const defaultCenter: [number, number] = selectedIncident
     ? [selectedIncident.latitude, selectedIncident.longitude]

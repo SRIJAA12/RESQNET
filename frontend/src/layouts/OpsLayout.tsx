@@ -8,14 +8,18 @@ import {
   Menu, 
   Search, 
   Bell, 
-  X,
-  ChevronDown,
-  ExternalLink,
-  ShieldAlert,
-  Sparkles
+  X, 
+  ChevronDown, 
+  ExternalLink, 
+  ShieldAlert, 
+  Sparkles,
+  Sun,
+  Moon
 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 export const OpsLayout: React.FC = () => {
+  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(() => {
@@ -226,6 +230,26 @@ export const OpsLayout: React.FC = () => {
                 <kbd className="hidden md:inline-block px-1.5 py-0.5 text-[10px] rounded bg-deep-slate border border-border text-text-muted">
                   ⌘K
                 </kbd>
+              </button>
+
+              {/* Theme Toggle Button */}
+              <button
+                onClick={toggleTheme}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-control bg-midnight/70 hover:bg-midnight border border-border/70 text-text-secondary hover:text-cloud-white text-xs transition-all shadow-sm"
+                title={theme === 'dark' ? 'Switch to Light (White) Theme' : 'Switch to Dark Mode'}
+                aria-label="Toggle visual theme"
+              >
+                {theme === 'dark' ? (
+                  <>
+                    <Sun className="w-3.5 h-3.5 text-amber" />
+                    <span className="hidden sm:inline text-[11px] font-medium">Light</span>
+                  </>
+                ) : (
+                  <>
+                    <Moon className="w-3.5 h-3.5 text-slate-700" />
+                    <span className="hidden sm:inline text-[11px] font-medium">Dark</span>
+                  </>
+                )}
               </button>
 
               {/* Notifications Dropdown */}

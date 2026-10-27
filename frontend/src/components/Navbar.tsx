@@ -13,10 +13,14 @@ import {
   Menu, 
   X,
   FileCheck2,
-  UserCheck
+  UserCheck,
+  Sun,
+  Moon
 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 export const Navbar: React.FC = () => {
+  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'dispatcher' | 'commander' | 'citizen'>('dispatcher');
@@ -108,6 +112,26 @@ export const Navbar: React.FC = () => {
               </select>
             </div>
 
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 transition-all shadow-sm"
+              title={theme === 'dark' ? 'Switch to Light (White) Theme' : 'Switch to Dark Mode'}
+              aria-label="Toggle visual theme"
+            >
+              {theme === 'dark' ? (
+                <>
+                  <Sun className="w-3.5 h-3.5 text-amber" />
+                  <span className="hidden sm:inline text-[11px]">Light</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="hidden sm:inline text-[11px]">Dark</span>
+                </>
+              )}
+            </button>
+
             <Link
               to="/status"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700/60 transition-colors"
@@ -127,6 +151,13 @@ export const Navbar: React.FC = () => {
 
           {/* Mobile Menu Button */}
           <div className="xl:hidden flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-md border border-slate-700"
+              title="Toggle theme"
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber" /> : <Moon className="w-4 h-4 text-slate-400" />}
+            </button>
             <Link
               to="/sos"
               className="px-2.5 py-1 text-xs font-bold bg-emergency-600 text-white rounded-md"

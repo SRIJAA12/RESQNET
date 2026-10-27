@@ -42,7 +42,7 @@ export const MainLayout: React.FC = () => {
   const breadcrumbs = getBreadcrumbs();
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-relief-600 selection:text-white font-sans antialiased">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased transition-colors duration-200">
       {/* Top Disclaimer for Synthetic/Demonstration mode */}
       <DisclaimerBanner />
 

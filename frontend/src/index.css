@@ -3,48 +3,269 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-midnight text-cloud-white font-sans antialiased;
-  }
-  
+  /* Dynamic typography & root defaults */
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Manrope', system-ui, sans-serif;
     letter-spacing: -0.025em;
   }
 }
 
-/* Custom Leaflet Map styling */
-.leaflet-container {
-  width: 100%;
-  height: 100%;
-  border-radius: 1rem;
-  background: #0B1220 !important;
-  font-family: 'Inter', system-ui, sans-serif;
-  z-index: 10;
+/* ─────────────────────────────────────────────────────────────────────────────
+   RESQNET Core Theme System: White Theme (Default) & Dark Mode
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Global smooth transition for theme switching */
+body, main, header, nav, aside, footer, div, section, article, button, input, textarea, select {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 180ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Tactical Dark Filter for OpenStreetMap tiles (eliminates API KEY REQUIRED watermarks) */
+/* Default Body: Crisp, high-contrast Light Theme */
+body {
+  background-color: #F8FAFC;
+  color: #0F172A;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Dark Mode Body */
+html.dark body {
+  background-color: #0B1220;
+  color: #F4F5F2;
+}
+
+/* ── 1. LIGHT THEME RULES (Default: Active when html does NOT have .dark) ── */
+html:not(.dark) {
+  color-scheme: light;
+}
+
+/* Base Canvas & Backdrops */
+html:not(.dark) .bg-midnight,
+html:not(.dark) .bg-slate-950,
+html:not(.dark) .bg-slate-950\/90,
+html:not(.dark) .bg-slate-950\/80,
+html:not(.dark) .bg-slate-950\/70,
+html:not(.dark) .bg-slate-950\/50 {
+  background-color: #F8FAFC !important;
+}
+
+/* Containers, Panels, Cards, Modals, Popovers */
+html:not(.dark) .bg-surface,
+html:not(.dark) .bg-surfaceContainer,
+html:not(.dark) .bg-slate-900,
+html:not(.dark) .bg-slate-900\/95,
+html:not(.dark) .bg-slate-900\/90,
+html:not(.dark) .bg-slate-900\/80,
+html:not(.dark) .bg-slate-900\/70,
+html:not(.dark) .bg-slate-900\/60,
+html:not(.dark) .bg-slate-900\/50,
+html:not(.dark) .bg-slate-900\/40,
+html:not(.dark) .bg-slate-900\/30,
+html:not(.dark) .bg-slate-900\/20,
+html:not(.dark) .bg-slate-850 {
+  background-color: #FFFFFF !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.05);
+}
+
+/* Raised Surfaces, Sub-panels, Chip Pills & Soft Backdrops */
+html:not(.dark) .bg-deep-slate,
+html:not(.dark) .bg-slate-800,
+html:not(.dark) .bg-slate-800\/90,
+html:not(.dark) .bg-slate-800\/80,
+html:not(.dark) .bg-slate-800\/60,
+html:not(.dark) .bg-slate-800\/50,
+html:not(.dark) .bg-slate-800\/40,
+html:not(.dark) .bg-slate-800\/30 {
+  background-color: #F1F5F9 !important;
+}
+
+/* Borders: Elegant, subtle slate-200 boundary */
+html:not(.dark) .border-border,
+html:not(.dark) .border-border\/90,
+html:not(.dark) .border-border\/80,
+html:not(.dark) .border-border\/70,
+html:not(.dark) .border-border\/60,
+html:not(.dark) .border-slate-800,
+html:not(.dark) .border-slate-800\/80,
+html:not(.dark) .border-slate-800\/60,
+html:not(.dark) .border-slate-800\/50,
+html:not(.dark) .border-slate-900,
+html:not(.dark) .border-slate-900\/80,
+html:not(.dark) .border-slate-900\/60,
+html:not(.dark) .border-slate-700,
+html:not(.dark) .border-slate-700\/60 {
+  border-color: #E2E8F0 !important;
+}
+
+/* Primary Text: High-contrast Slate-900 */
+html:not(.dark) .text-cloud-white,
+html:not(.dark) .text-white,
+html:not(.dark) .text-slate-100 {
+  color: #0F172A !important;
+}
+
+/* Secondary Text: Balanced Slate-700 / Slate-800 */
+html:not(.dark) .text-slate-200,
+html:not(.dark) .text-slate-300 {
+  color: #1E293B !important;
+}
+
+/* Body & Description Text: Readable Slate-600 */
+html:not(.dark) .text-text-secondary,
+html:not(.dark) .text-slate-400 {
+  color: #334155 !important;
+}
+
+/* Muted & Caption Text: Subtle Slate-500 */
+html:not(.dark) .text-text-muted,
+html:not(.dark) .text-slate-500 {
+  color: #64748B !important;
+}
+
+/* Form Inputs, Selects, & Textareas in Light Mode */
+html:not(.dark) input:not([type="checkbox"]):not([type="radio"]),
+html:not(.dark) textarea,
+html:not(.dark) select {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+
+html:not(.dark) input::placeholder,
+html:not(.dark) textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+html:not(.dark) select option {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+/* Hover States in Light Mode */
+html:not(.dark) .hover\:bg-deep-slate:hover,
+html:not(.dark) .hover\:bg-midnight:hover,
+html:not(.dark) .hover\:bg-midnight\/60:hover,
+html:not(.dark) .hover\:bg-midnight\/40:hover,
+html:not(.dark) .hover\:bg-slate-800:hover,
+html:not(.dark) .hover\:bg-slate-800\/80:hover,
+html:not(.dark) .hover\:bg-slate-800\/50:hover,
+html:not(.dark) .hover\:bg-slate-700:hover {
+  background-color: #F1F5F9 !important;
+}
+
+/* Card Shadows in Light Mode */
+html:not(.dark) .shadow-card,
+html:not(.dark) .shadow-modal,
+html:not(.dark) .shadow-lg,
+html:not(.dark) .shadow-2xl {
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04) !important;
+}
+
+/* Brand Button Styling in Light Mode */
+html:not(.dark) .bg-cyan {
+  background-color: #0D9488 !important;
+  color: #FFFFFF !important;
+}
+
+html:not(.dark) .bg-cyan:hover,
+html:not(.dark) .hover\:bg-cyan\/90:hover {
+  background-color: #0F766E !important;
+}
+
+html:not(.dark) .text-cyan,
+html:not(.dark) .text-signalCyan {
+  color: #0D9488 !important;
+}
+
+html:not(.dark) .border-cyan,
+html:not(.dark) .border-signalCyan {
+  border-color: #0D9488 !important;
+}
+
+/* Light mode gradients */
+html:not(.dark) .from-slate-900 {
+  --tw-gradient-from: #FFFFFF var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(255, 255, 255, 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+html:not(.dark) .via-slate-900\/90 {
+  --tw-gradient-to: rgba(248, 250, 252, 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #F8FAFC var(--tw-gradient-via-position), var(--tw-gradient-to) !important;
+}
+
+html:not(.dark) .to-slate-950 {
+  --tw-gradient-to: #F1F5F9 var(--tw-gradient-to-position) !important;
+}
+
+/* Light mode simulated incident badge */
+html:not(.dark) .bg-emergency-950\/80 {
+  background-color: #FFF1F2 !important;
+  border-color: #FECDD3 !important;
+  color: #BE123C !important;
+}
+
+/* Light mode Leaflet popup */
+html:not(.dark) .leaflet-container {
+  background: #F8FAFC !important;
+}
+
+html:not(.dark) .leaflet-popup-content-wrapper {
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15) !important;
+}
+
+html:not(.dark) .leaflet-popup-tip {
+  background: #FFFFFF !important;
+}
+
+/* Light mode scrollbar */
+html:not(.dark) ::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+
+html:not(.dark) ::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+
+html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* ── 2. DARK THEME SPECIFICS (When .dark is present) ── */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark .leaflet-container {
+  background: #0B1220 !important;
+}
+
 .dark-map-tiles .leaflet-tile {
   filter: brightness(0.65) invert(1) contrast(2.5) hue-rotate(200deg) saturate(0.35) brightness(0.75);
 }
 
 .leaflet-popup-content-wrapper {
-  background: #111C2B !important;
-  color: #F4F5F2 !important;
-  border-radius: 0.75rem !important;
-  border: 1px solid #26394D !important;
-  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.6) !important;
-  padding: 0 !important;
+  background: #111C2B;
+  color: #F4F5F2;
+  border-radius: 0.75rem;
+  border: 1px solid #26394D;
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.6);
+  padding: 0;
   overflow: hidden;
 }
 
 .leaflet-popup-content {
-  margin: 12px 14px !important;
-  line-height: 1.4 !important;
+  margin: 12px 14px;
+  line-height: 1.4;
 }
 
 .leaflet-popup-tip {
-  background: #111C2B !important;
+  background: #111C2B;
 }
 
 /* Pulsing beacon marker for critical incidents */
@@ -67,21 +288,16 @@
   animation: critical-pulse 2s infinite;
 }
 
-/* Custom scrollbars */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
+/* Dark mode scrollbars */
+html.dark ::-webkit-scrollbar-track {
   background: #070d19;
 }
 
-::-webkit-scrollbar-thumb {
+html.dark ::-webkit-scrollbar-thumb {
   background: #1e293b;
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
+html.dark ::-webkit-scrollbar-thumb:hover {
   background: #334155;
 }
