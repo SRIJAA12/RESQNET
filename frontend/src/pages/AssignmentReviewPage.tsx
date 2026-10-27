@@ -66,7 +66,7 @@ export const AssignmentReviewPage: React.FC = () => {
       }
 
       // Pre-select first available resource if none selected
-      const available = resList.find((r) => r.status === 'available');
+      const available = resList.find((r) => (r.status || '').toLowerCase() === 'available');
       if (available && !selectedResourceId) {
         setSelectedResourceId(available.id);
       }
@@ -97,7 +97,7 @@ export const AssignmentReviewPage: React.FC = () => {
     if (!selectedIncident || !selectedResourceId) return;
 
     // Conflict prevention check in demo state layer
-    if (selectedResource && selectedResource.status !== 'available') {
+    if (selectedResource && (selectedResource.status || '').toLowerCase() !== 'available') {
       setErrorMsg(`Conflict Prevented: Resource "${selectedResource.name}" is currently marked ${selectedResource.status.toUpperCase()} and cannot be assigned.`);
       return;
     }
@@ -365,34 +365,40 @@ export const AssignmentReviewPage: React.FC = () => {
                     selectedIncident.latitude,
                     selectedIncident.longitude
                   );
-                  const isAvailable = resource.status === 'available';
+                  const isAvailable = (resource.status || '').toLowerCase() === 'available';
                   const isSelected = selectedResourceId === resource.id;
 
                   return (
                     <div
                       key={resource.id}
-                      onClick={() => isAvailable && setSelectedResourceId(resource.id)}
-                      className={`p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                      onClick={() => {
+                        if (isAvailable) {
+                          setSelectedResourceId(resource.id);
+                        }
+                      }}
+                      className={`p-3.5 rounded-2xl border transition-all ${
                         isSelected
-                          ? 'bg-signalCyan/10 border-signalCyan shadow-md shadow-signalCyan/10'
+                          ? 'bg-cyan/15 border-cyan shadow-md shadow-cyan/20 ring-1 ring-cyan cursor-pointer'
                           : isAvailable
-                          ? 'bg-midnight border-slate-800 hover:border-slate-700'
+                          ? 'bg-midnight border-slate-800 hover:border-slate-700 hover:bg-slate-900/60 cursor-pointer'
                           : 'bg-midnight/40 border-slate-900 opacity-60 cursor-not-allowed'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start gap-2.5">
                           <div
-                            className={`w-4 h-4 rounded-full border flex items-center justify-center mt-0.5 ${
+                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 transition-all flex-shrink-0 ${
                               isSelected
-                                ? 'border-signalCyan bg-signalCyan text-midnight'
-                                : 'border-slate-700'
+                                ? 'border-cyan bg-cyan text-midnight font-bold shadow-sm'
+                                : isAvailable
+                                ? 'border-slate-500 bg-midnight hover:border-cyan/50'
+                                : 'border-slate-800 bg-slate-900'
                             }`}
                           >
-                            {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                            {isSelected && <Check className="w-3 h-3 stroke-[3] text-midnight" />}
                           </div>
                           <div>
-                            <span className="font-bold text-xs text-white block">
+                            <span className={`font-bold text-xs block ${isSelected ? 'text-cyan' : 'text-white'}`}>
                               {resource.name}
                             </span>
                             <span className="text-[11px] text-slate-400 capitalize">
@@ -429,7 +435,7 @@ export const AssignmentReviewPage: React.FC = () => {
                     value={dispatcherNotes}
                     onChange={(e) => setDispatcherNotes(e.target.value)}
                     placeholder="Enter instructions for rescue craft team lead..."
-                    className="w-full px-3 py-2 rounded-xl bg-midnight border border-slate-700 text-xs text-white placeholder-slate-500 outline-none focus:border-signalCyan resize-none"
+                    className="w-full px-3 py-2 rounded-xl bg-midnight border border-slate-700 text-xs text-white placeholder-slate-500 outline-none focus:border-cyan resize-none"
                   />
                 </div>
 
@@ -439,7 +445,7 @@ export const AssignmentReviewPage: React.FC = () => {
                     id="autoDispatch"
                     checked={autoDispatch}
                     onChange={(e) => setAutoDispatch(e.target.checked)}
-                    className="w-4 h-4 rounded text-signalCyan bg-midnight border-slate-700"
+                    className="w-4 h-4 rounded text-cyan bg-midnight border-slate-700"
                   />
                   <label htmlFor="autoDispatch" className="cursor-pointer select-none">
                     Issue immediate mission orders (transition incident to <strong>IN_PROGRESS</strong>)
@@ -448,8 +454,8 @@ export const AssignmentReviewPage: React.FC = () => {
 
                 <button
                   type="submit"
-                  disabled={submitting || !selectedResourceId || selectedResource?.status !== 'available'}
-                  className="w-full py-3.5 px-4 rounded-xl bg-signalCyan hover:bg-signalCyan/90 disabled:opacity-50 text-midnight font-black text-sm shadow-xl shadow-signalCyan/15 flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  disabled={submitting || !selectedResourceId || (selectedResource?.status || '').toLowerCase() !== 'available'}
+                  className="w-full py-3.5 px-4 rounded-xl bg-cyan hover:bg-cyan/90 disabled:opacity-40 disabled:cursor-not-allowed text-midnight font-black text-sm shadow-xl shadow-cyan/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
                   <FileCheck2 className="w-4 h-4" />
                   {submitting

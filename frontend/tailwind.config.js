@@ -22,8 +22,11 @@ export default {
 
         // Accents / status
         cyan:       '#36D6C4',
+        signalCyan: '#36D6C4',
         amber:      '#FFB547',
+        signalAmber: '#FFB547',
         coral:      '#FF6268',
+        surfaceContainer: '#172638',
         'success-green': '#65D6A6',
         'info-blue': '#79B8FF',
 
