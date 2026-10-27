@@ -4,7 +4,46 @@ import L from 'leaflet';
 import { Incident, Resource, Shelter } from '../types';
 import { StatusBadge } from './StatusBadge';
 import { Link } from 'react-router-dom';
-import { ChevronRight, HeartPulse, Users, AlertTriangle } from 'lucide-react';
+import { ChevronRight, HeartPulse, Users, AlertTriangle, Layers } from 'lucide-react';
+
+type MapTheme = 'tactical-dark' | 'satellite' | 'street';
+
+const MAP_TILES: Record<
+  MapTheme,
+  {
+    name: string;
+    url: string;
+    attribution: string;
+    className: string;
+    subdomains: string;
+    maxZoom: number;
+  }
+> = {
+  'tactical-dark': {
+    name: 'Tactical Dark',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    className: 'dark-map-tiles',
+    subdomains: 'abc',
+    maxZoom: 19,
+  },
+  satellite: {
+    name: 'Satellite',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics',
+    className: '',
+    subdomains: '',
+    maxZoom: 19,
+  },
+  street: {
+    name: 'Streets',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    className: '',
+    subdomains: 'abc',
+    maxZoom: 19,
+  },
+};
 
 // Fix default Leaflet icon paths
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -118,6 +157,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   showFloodOverlay = true,
 }) => {
   const [tileError, setTileError] = useState(false);
+  const [mapTheme, setMapTheme] = useState<MapTheme>('tactical-dark');
 
   const defaultCenter: [number, number] = selectedIncident
     ? [selectedIncident.latitude, selectedIncident.longitude]
@@ -125,9 +165,46 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
   return (
     <div className={`relative w-full ${heightClass} rounded-panel overflow-hidden border border-border bg-midnight shadow-card`}>
+      {/* Map Layer Switcher Control */}
+      <div className="absolute top-3 right-3 z-[1000] bg-deep-slate/90 backdrop-blur-md border border-border/80 rounded-lg p-1 flex items-center gap-1 shadow-lg">
+        <button
+          type="button"
+          onClick={() => setMapTheme('tactical-dark')}
+          className={`px-2.5 py-1 text-xs font-medium rounded transition-all ${
+            mapTheme === 'tactical-dark'
+              ? 'bg-cyan text-midnight font-semibold shadow-sm'
+              : 'text-text-secondary hover:text-cloud-white hover:bg-slate/50'
+          }`}
+        >
+          Tactical Dark
+        </button>
+        <button
+          type="button"
+          onClick={() => setMapTheme('satellite')}
+          className={`px-2.5 py-1 text-xs font-medium rounded transition-all ${
+            mapTheme === 'satellite'
+              ? 'bg-cyan text-midnight font-semibold shadow-sm'
+              : 'text-text-secondary hover:text-cloud-white hover:bg-slate/50'
+          }`}
+        >
+          Satellite
+        </button>
+        <button
+          type="button"
+          onClick={() => setMapTheme('street')}
+          className={`px-2.5 py-1 text-xs font-medium rounded transition-all ${
+            mapTheme === 'street'
+              ? 'bg-cyan text-midnight font-semibold shadow-sm'
+              : 'text-text-secondary hover:text-cloud-white hover:bg-slate/50'
+          }`}
+        >
+          Streets
+        </button>
+      </div>
+
       {/* Offline / Tile Notice if external tiles fail */}
       {tileError && (
-        <div className="absolute top-3 left-3 right-3 z-20 bg-deep-slate/95 border border-border text-text-secondary px-3 py-2 rounded-control text-xs flex items-center justify-between backdrop-blur-md">
+        <div className="absolute top-12 left-3 right-3 z-20 bg-deep-slate/95 border border-border text-text-secondary px-3 py-2 rounded-control text-xs flex items-center justify-between backdrop-blur-md">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-amber" />
             <span>Map tile server offline. Tactical coordinates remain fully active.</span>
@@ -151,12 +228,14 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
           targetCoords={selectedIncident ? [selectedIncident.latitude, selectedIncident.longitude] : null}
         />
 
-        {/* Clean, keyless Dark Matter CartoDB tile layer */}
+        {/* 100% Free, Keyless Tile Layer */}
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          subdomains="abcd"
-          maxZoom={19}
+          key={mapTheme}
+          attribution={MAP_TILES[mapTheme].attribution}
+          url={MAP_TILES[mapTheme].url}
+          className={MAP_TILES[mapTheme].className}
+          subdomains={MAP_TILES[mapTheme].subdomains || 'abc'}
+          maxZoom={MAP_TILES[mapTheme].maxZoom}
           eventHandlers={{
             tileerror: () => setTileError(true),
           }}

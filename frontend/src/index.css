@@ -23,6 +23,11 @@
   z-index: 10;
 }
 
+/* Tactical Dark Filter for OpenStreetMap tiles (eliminates API KEY REQUIRED watermarks) */
+.dark-map-tiles .leaflet-tile {
+  filter: brightness(0.65) invert(1) contrast(2.5) hue-rotate(200deg) saturate(0.35) brightness(0.75);
+}
+
 .leaflet-popup-content-wrapper {
   background: #111C2B !important;
   color: #F4F5F2 !important;
