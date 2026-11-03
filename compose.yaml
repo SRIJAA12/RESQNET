@@ -20,6 +20,42 @@ services:
     networks:
       - resqnet_network
 
+
+  postgres-test:
+    image: postgis/postgis:16-3.4
+    container_name: resqnet_postgres_test
+    environment:
+      POSTGRES_USER: resqnet_test_user
+      POSTGRES_PASSWORD: resqnet_test_password
+      POSTGRES_DB: resqnet_test_db
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U resqnet_test_user -d resqnet_test_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - resqnet_network
+
+  backend-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: resqnet_backend_test
+    environment:
+      ENVIRONMENT: testing
+      DEBUG: "true"
+      DATABASE_URL: postgresql://resqnet_test_user:resqnet_test_password@postgres-test:5432/resqnet_test_db
+      TEST_DATABASE_URL: postgresql://resqnet_test_user:resqnet_test_password@postgres-test:5432/resqnet_test_db
+    command: pytest -v
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    networks:
+      - resqnet_network
+
   backend:
     build:
       context: ./backend
@@ -68,6 +104,7 @@ services:
       - backend
     networks:
       - resqnet_network
+
 
 volumes:
   postgres_data:
