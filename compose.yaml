@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgis/postgis:16-3.4
-    container_name: resqnet_postgres
+    
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-resqnet_user}
@@ -23,7 +23,6 @@ services:
 
   postgres-test:
     image: postgis/postgis:16-3.4
-    container_name: resqnet_postgres_test
     environment:
       POSTGRES_USER: resqnet_test_user
       POSTGRES_PASSWORD: resqnet_test_password
@@ -43,7 +42,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: resqnet_backend_test
     environment:
       ENVIRONMENT: testing
       DEBUG: "true"
@@ -60,7 +58,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: resqnet_backend
     restart: unless-stopped
     environment:
       ENVIRONMENT: ${ENVIRONMENT:-development}
@@ -90,7 +87,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: resqnet_frontend
+    
     restart: unless-stopped
     environment:
       # All endpoints (ops + citizen SOS) go through the single FastAPI backend
