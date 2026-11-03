@@ -3,26 +3,28 @@ pipeline {
 
     environment {
         DOCKER = '/usr/local/bin/docker'
-        ANSIBLE_PLAYBOOK = '/usr/bin/ansible-playbook'
-        DEPLOY_PLAYBOOK = '/opt/resqnet-ansible/deploy.yml'
+        ANSIBLE_PLAYBOOK = '/opt/resqnet-ansible/deploy.yml'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/SRIJAA12/RESQNET.git'
+                echo 'Source code is checked out by Jenkins SCM.'
             }
         }
 
-     	stage('Backend Tests') {
+        stage('Backend Tests') {
             steps {
                 sh '''
-                    ${DOCKER} run --rm \
+                    /usr/local/bin/docker run --rm \
                       -v "$WORKSPACE/backend:/app" \
                       -w /app \
                       python:3.11-slim \
-                      sh -c 'apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y gcc libpq-dev && pip install -r requirements.txt && pytest -q'
+                      sh -c "set -e; \
+                        apt-get update; \
+                        DEBIAN_FRONTEND=noninteractive apt-get install -y gcc libpq-dev; \
+                        pip install -r /app/requirements.txt; \
+                        pytest -q /app/tests"
                 '''
             }
         }
@@ -30,8 +32,12 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 sh '''
-                    test -f .env || cp .env.example .env
-                    ${DOCKER} compose build backend frontend
+                    set -e
+                    echo "Validating Docker Compose configuration..."
+                    ${DOCKER} compose config
+
+                    echo "Building RESQNET Docker images..."
+                    ${DOCKER} compose build
                 '''
             }
         }
@@ -39,10 +45,9 @@ pipeline {
         stage('Deploy with Ansible') {
             steps {
                 sh '''
-                    ${ANSIBLE_PLAYBOOK} \
-                      -i localhost, \
-                      -c local \
-                      ${DEPLOY_PLAYBOOK}
+                    set -e
+                    echo "Deploying RESQNET using Ansible..."
+                    ansible-playbook -i localhost, -c local "$ANSIBLE_PLAYBOOK"
                 '''
             }
         }
@@ -50,9 +55,22 @@ pipeline {
         stage('Health Check') {
             steps {
                 sh '''
-                    ${DOCKER} compose ps
-                    curl --fail --silent --show-error \
-                      http://localhost:8001/api/health
+                    set -e
+                    echo "Checking RESQNET backend health..."
+
+                    for i in $(seq 1 12); do
+                        if curl --fail --silent http://localhost:8001/api/health; then
+                            echo
+                            echo "RESQNET backend health check passed."
+                            exit 0
+                        fi
+
+                        echo "Backend not ready yet. Retrying in 5 seconds..."
+                        sleep 5
+                    done
+
+                    echo "Backend health check failed."
+                    exit 1
                 '''
             }
         }
@@ -60,10 +78,15 @@ pipeline {
 
     post {
         success {
-            echo 'RESQNET CI/CD pipeline completed successfully.'
+            echo 'RESQNET CI/CD pipeline completed successfully!'
         }
+
         failure {
             echo 'RESQNET CI/CD pipeline failed. Check the stage logs.'
+        }
+
+        always {
+            echo 'Pipeline execution finished.'
         }
     }
 }
