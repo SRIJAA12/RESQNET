@@ -15,14 +15,14 @@ pipeline {
             }
         }
 
-        stage('Backend Tests') {
+     	stage('Backend Tests') {
             steps {
                 sh '''
                     ${DOCKER} run --rm \
                       -v "$WORKSPACE/backend:/app" \
                       -w /app \
                       python:3.11-slim \
-                      sh -c "apt-get update >/dev/null && apt-get install -y gcc libpq-dev >/dev/null && pip install -r requirements.txt >/dev/null && pytest -q"
+                      sh -c 'apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y gcc libpq-dev && pip install -r requirements.txt && pytest -q'
                 '''
             }
         }
