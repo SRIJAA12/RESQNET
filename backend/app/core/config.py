@@ -1,6 +1,6 @@
 import os
 from typing import List, Union
-from pydantic import AnyHttpUrl, field_validator
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     )
 
     APP_NAME: str = "RESQNET — Intelligent Disaster Relief Ecosystem"
-    PROJECT_VERSION: str = "0.1.0"
+    PROJECT_VERSION: str = "0.2.0"
     ENVIRONMENT: str = "development"
     DEBUG: bool = True
     SECRET_KEY: str = "dev-secret-key-change-in-production-must-be-32-chars-long"
@@ -40,19 +40,8 @@ class Settings(BaseSettings):
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
 
-    # Database
+    # Database — PostgreSQL (PostGIS)
     DATABASE_URL: str = "postgresql://resqnet_user:resqnet_password@postgres:5432/resqnet_db"
-
-    # AWS boundaries
-    USE_AWS_SERVICES: bool = False
-    AWS_REGION: str = "us-east-1"
-    COGNITO_USER_POOL_ID: str = ""
-    COGNITO_APP_CLIENT_ID: str = ""
-    COGNITO_JWKS_URL: str = ""
-    S3_ATTACHMENT_BUCKET_NAME: str = "resqnet-incident-attachments-dev"
-    S3_PRESIGNED_EXPIRY_SECONDS: int = 900
-    SNS_DISPATCH_TOPIC_ARN: str = ""
-    CLOUDWATCH_LOG_GROUP: str = "/resqnet/backend-dev"
 
 
 settings = Settings()

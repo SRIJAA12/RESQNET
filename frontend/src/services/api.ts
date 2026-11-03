@@ -1144,13 +1144,12 @@ class ApiClient {
     }
   }
 
-  async getIncidents(params?: { status?: string; priority?: string; search?: string; sync?: boolean }): Promise<Incident[]> {
+  async getIncidents(params?: { status?: string; priority?: string; search?: string }): Promise<Incident[]> {
     try {
       const query = new URLSearchParams();
       if (params?.status) query.set('status', params.status);
       if (params?.priority) query.set('priority', params.priority);
       if (params?.search) query.set('search', params.search);
-      if (params?.sync) query.set('sync', 'true');
       const res = await this.request<{ items: Incident[] }>(`/v1/incidents?${query.toString()}`);
       return res.items;
     } catch {
@@ -1166,18 +1165,6 @@ class ApiClient {
         );
       }
       return list;
-    }
-  }
-
-  async syncIncidents(): Promise<{ synced_count: number; skipped_count: number; total_examined: number; synced_references: string[] }> {
-    try {
-      const res = await this.request<{ data: { synced_count: number; skipped_count: number; total_examined: number; synced_references: string[] } }>('/v1/incidents/sync', {
-        method: 'POST',
-      });
-      return res.data;
-    } catch (err) {
-      console.warn('Incident sync failed or in mock mode:', err);
-      return { synced_count: 0, skipped_count: 0, total_examined: 0, synced_references: [] };
     }
   }
 

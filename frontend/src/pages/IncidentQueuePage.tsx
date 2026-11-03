@@ -27,8 +27,6 @@ export const IncidentQueuePage: React.FC = () => {
   const [newStatus, setNewStatus] = useState<IncidentStatus>('verified');
   const [updateNotes, setUpdateNotes] = useState('');
   const [updating, setUpdating] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
 
   const loadIncidents = async () => {
     setLoading(true);
@@ -46,25 +44,8 @@ export const IncidentQueuePage: React.FC = () => {
     }
   };
 
-  const handleSync = async () => {
-    setSyncing(true);
-    setSyncFeedback(null);
-    try {
-      const res = await api.syncIncidents();
-      if (res.synced_count > 0) {
-        setSyncFeedback(`Synchronized ${res.synced_count} new citizen SOS report(s)`);
-        await loadIncidents();
-      } else {
-        setSyncFeedback('All citizen SOS reports are up to date');
-      }
-      setTimeout(() => setSyncFeedback(null), 4000);
-    } catch (err: any) {
-      console.error('Failed to sync serverless SOS reports:', err);
-      setSyncFeedback('Sync completed with current records');
-      setTimeout(() => setSyncFeedback(null), 4000);
-    } finally {
-      setSyncing(false);
-    }
+  const handleRefresh = async () => {
+    await loadIncidents();
   };
 
   useEffect(() => {
@@ -107,27 +88,13 @@ export const IncidentQueuePage: React.FC = () => {
           <p className="text-xs sm:text-sm text-slate-400">
             Review, verify, and track live SOS submissions. Prioritize by severity and trapped count.
           </p>
-          {syncFeedback && (
-            <p className="text-xs text-relief-400 font-medium mt-1 animate-pulse">
-              ✓ {syncFeedback}
-            </p>
-          )}
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <button
-            onClick={handleSync}
-            disabled={syncing}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-relief-900/60 hover:bg-relief-800/80 border border-relief-700/50 text-xs text-relief-200 hover:text-white transition-colors cursor-pointer"
-            title="Ingest pending SOS reports from Serverless DynamoDB into operational PostgreSQL queue"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
-            {syncing ? 'Syncing...' : 'Sync Serverless SOS'}
-          </button>
-
-          <button
-            onClick={loadIncidents}
+            onClick={handleRefresh}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 hover:text-white transition-colors cursor-pointer"
+            title="Refresh incident queue"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             Refresh Queue

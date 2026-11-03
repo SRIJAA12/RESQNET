@@ -16,7 +16,6 @@ from sqlalchemy.pool import StaticPool
 os.environ["ENVIRONMENT"] = "testing"
 os.environ["DEBUG"] = "true"
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-os.environ["USE_AWS_SERVICES"] = "false"
 
 from app.db.session import Base, get_db
 from app.main import app as fastapi_app

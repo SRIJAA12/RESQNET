@@ -1,5 +1,6 @@
-import random
-import string
+import re
+import secrets
+from datetime import datetime, timezone
 from typing import List, Optional, Tuple
 from sqlalchemy.orm import Session
 from app.models.incident import Incident, IncidentStatusEnum, IncidentPriorityEnum
@@ -15,9 +16,18 @@ class IncidentService:
         self.audit_repo = AuditRepository(db)
 
     @staticmethod
-    def _generate_reference_code() -> str:
-        suffix = "".join(random.choices(string.digits, k=4))
-        return f"SOS-2026-FLOOD-{suffix}"
+    def _generate_reference_code(disaster_type: str = "flood") -> str:
+        """
+        Generates a unique, collision-resistant human-readable public reference code.
+        Format: SOS-<YEAR>-<DISASTER>-<4-char suffix>
+        Example: SOS-2026-FLOOD-X4K2
+        Uses unambiguous charset (no 0/O, 1/I/L) for readability.
+        """
+        year = datetime.now(timezone.utc).year
+        clean_type = re.sub(r"[^A-Za-z0-9]", "", disaster_type).upper()[:8] or "EMERGENCY"
+        charset = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
+        suffix = "".join(secrets.choice(charset) for _ in range(4))
+        return f"SOS-{year}-{clean_type}-{suffix}"
 
     @staticmethod
     def _calculate_ai_triage(data: IncidentCreate) -> Tuple[float, IncidentPriorityEnum, str]:
@@ -66,7 +76,7 @@ class IncidentService:
         return score, suggested, notes
 
     def create_incident(self, data: IncidentCreate) -> Incident:
-        ref_code = self._generate_reference_code()
+        ref_code = self._generate_reference_code(data.disaster_type)
         ai_score, ai_priority, ai_notes = self._calculate_ai_triage(data)
 
         # In PostgreSQL with PostGIS, geometry point is constructed from lon/lat
@@ -219,23 +229,6 @@ class IncidentService:
             performed_by=performed_by_name,
             changes={"from": previous_status, "to": new_status, "notes": update.notes}
         )
-
-        # 3. Synchronize status milestone back to DynamoDB for citizen tracking
-        try:
-            from app.services.incident_sync_service import IncidentSyncService
-            sync_service = IncidentSyncService(self.db)
-            sync_service.push_status_milestone_to_dynamo(
-                reference_code=incident.reference_code,
-                new_status=new_status,
-                notes=update.notes
-            )
-        except Exception as sync_err:
-            # Operational status update in PostgreSQL succeeded; log sync warning
-            import logging
-            logging.getLogger(__name__).warning(
-                "Could not push status milestone to DynamoDB for %s: %s",
-                incident.reference_code, str(sync_err)
-            )
 
         return updated
 

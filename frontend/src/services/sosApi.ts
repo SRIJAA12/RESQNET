@@ -1,38 +1,46 @@
 /**
- * RESQNET — Phase 2: Serverless Citizen SOS API Client
+ * RESQNET — Citizen SOS API Client
  *
- * Dedicated API client for the citizen-facing public endpoints served by the
- * AWS SAM / API Gateway HTTP API (Phase 1 serverless pipeline).
+ * Calls the FastAPI backend (same as the rest of the app) for citizen SOS
+ * submission and public status tracking.
+ *
+ * Endpoints (relative to VITE_API_BASE_URL, default: http://localhost:8001/api):
+ *   POST /v1/public/incidents           — Submit a new citizen SOS
+ *   GET  /v1/public/incidents/ref/:ref  — Track an existing incident by reference code
  *
  * This client intentionally does NOT fall back to in-memory mock data on
  * network failure. A failed submission is a hard error that must be surfaced
  * clearly to the citizen so they can retry or seek alternative help.
- *
- * Endpoints (relative to VITE_SERVERLESS_API_URL, default: http://localhost:3000):
- *   POST /v1/public/incidents           — Submit a new citizen SOS
- *   GET  /v1/public/incidents/ref/:ref  — Track an existing incident by reference code
  */
 
 // ---------------------------------------------------------------------------
-// Environment
+// Base URL — uses the same FastAPI backend as the rest of the frontend
 // ---------------------------------------------------------------------------
 
-/**
- * Base URL of the SAM local API Gateway or deployed API Gateway stage URL.
- * In local development: http://localhost:3000  (default sam local start-api port)
- * In production:        the CloudFormation output URL for the HTTP API stage.
- */
-const SERVERLESS_BASE =
-  (import.meta.env.VITE_SERVERLESS_API_URL as string | undefined) ||
-  'http://localhost:3000';
+const getPublicApiBase = (): string => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL as string | undefined;
+  if (!envUrl) {
+    return 'http://localhost:8001/api/v1';
+  }
+  // Strip trailing /api if present, then append /v1
+  const clean = envUrl.replace(/\/+$/, '');
+  if (clean.endsWith('/api')) {
+    return `${clean}/v1`;
+  }
+  if (clean.endsWith('/v1')) {
+    return clean;
+  }
+  return `${clean}/v1`;
+};
+
+const PUBLIC_API_BASE = getPublicApiBase();
 
 // ---------------------------------------------------------------------------
-// Request / Response types — mirrors backend_serverless/schemas/incident.py
+// Request / Response types
 // ---------------------------------------------------------------------------
 
 /**
  * Payload sent to POST /v1/public/incidents
- * Aligns exactly with PublicIncidentCreate Pydantic schema.
  */
 export interface SosSubmitPayload {
   reporter_name: string;
@@ -52,7 +60,6 @@ export interface SosSubmitPayload {
 
 /**
  * Minimal confirmation returned by POST /v1/public/incidents
- * Mirrors PublicIncidentCreationResponse Pydantic schema.
  */
 export interface SosSubmissionResponse {
   reference_code: string;
@@ -66,7 +73,6 @@ export interface SosSubmissionResponse {
 
 /**
  * A single sanitized status lifecycle milestone from the tracking endpoint.
- * Mirrors SanitizedIncidentMilestone Pydantic schema.
  */
 export interface SosStatusMilestone {
   status: string;
@@ -76,8 +82,6 @@ export interface SosStatusMilestone {
 
 /**
  * Public tracking payload returned by GET /v1/public/incidents/ref/:ref
- * Mirrors SanitizedIncidentTrackingResponse Pydantic schema.
- *
  * Deliberately excludes reporter_name, reporter_contact, latitude, longitude,
  * ai_triage_score, and internal dispatcher IDs.
  */
@@ -122,7 +126,7 @@ async function request<T>(
   path: string,
   body?: unknown,
 ): Promise<T> {
-  const url = `${SERVERLESS_BASE}${path}`;
+  const url = `${PUBLIC_API_BASE}${path}`;
   const options: RequestInit = {
     method,
     headers: {
@@ -180,23 +184,19 @@ async function request<T>(
 // ---------------------------------------------------------------------------
 
 /**
- * Submit a new citizen emergency SOS request to the serverless pipeline.
- *
+ * Submit a new citizen emergency SOS request.
  * POST /v1/public/incidents
- *
  * @throws {SosApiError} — always propagated; no silent fallback.
  */
 export async function submitSos(
   payload: SosSubmitPayload,
 ): Promise<SosSubmissionResponse> {
-  return request<SosSubmissionResponse>('POST', '/v1/public/incidents', payload);
+  return request<SosSubmissionResponse>('POST', '/public/incidents', payload);
 }
 
 /**
  * Retrieve the sanitized public tracking record for an existing incident.
- *
  * GET /v1/public/incidents/ref/:referenceCode
- *
  * @throws {SosApiError} — always propagated; no silent fallback.
  */
 export async function trackByRef(
@@ -205,7 +205,7 @@ export async function trackByRef(
   const encoded = encodeURIComponent(referenceCode.trim().toUpperCase());
   return request<SosTrackingResponse>(
     'GET',
-    `/v1/public/incidents/ref/${encoded}`,
+    `/public/incidents/ref/${encoded}`,
   );
 }
 

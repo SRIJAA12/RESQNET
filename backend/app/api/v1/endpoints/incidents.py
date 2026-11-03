@@ -1,4 +1,11 @@
-from typing import Optional, List
+"""
+Operational incident management endpoints (dispatcher/ops role).
+All data is served from PostgreSQL via FastAPI.
+
+Note: Public citizen SOS submission and tracking endpoints live in public_incidents.py
+      and require no authentication.
+"""
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from app.db.session import get_db
@@ -18,18 +25,10 @@ def list_incidents(
     priority: Optional[str] = Query(None, description="Filter by priority"),
     event_id: Optional[str] = Query(None, description="Filter by event ID"),
     search: Optional[str] = Query(None, description="Search reference code, location or description"),
-    sync: bool = Query(False, description="Auto-sync newly submitted serverless SOS reports"),
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=100),
     db: Session = Depends(get_db)
 ):
-    if sync:
-        try:
-            from app.services.incident_sync_service import IncidentSyncService
-            IncidentSyncService(db).sync_all_submitted_from_dynamo()
-        except Exception:
-            pass
-
     service = IncidentService(db)
     items, total_count = service.list_incidents(
         status=status,
@@ -58,8 +57,8 @@ def create_incident(
     db: Session = Depends(get_db)
 ):
     """
-    Public Citizen SOS Entry Point.
-    Accepts emergency requests, runs assistive AI triage, and generates a tracking reference code.
+    Ops/dispatcher internal incident creation (direct PostgreSQL entry).
+    For public citizen SOS, use POST /api/v1/public/incidents instead.
     """
     service = IncidentService(db)
     incident = service.create_incident(incident_in)
@@ -106,25 +105,6 @@ def get_incident(
     )
 
 
-@router.post("/sync", response_model=APIResponse[dict])
-def sync_serverless_incidents(
-    db: Session = Depends(get_db),
-    current_user: AuthUser = Depends(require_role("dispatcher"))
-):
-    """
-    Synchronizes newly submitted citizen SOS reports from serverless DynamoDB
-    into the operational PostgreSQL database. Requires authorized dispatcher role.
-    """
-    from app.services.incident_sync_service import IncidentSyncService
-    service = IncidentSyncService(db)
-    summary = service.sync_all_submitted_from_dynamo()
-    return APIResponse(
-        success=True,
-        message=f"Synchronized {summary['synced_count']} new incident(s) from serverless ingestion.",
-        data=summary
-    )
-
-
 @router.patch("/{incident_id}/status", response_model=APIResponse[IncidentResponse])
 def update_incident_status(
     incident_id: str,
@@ -134,6 +114,8 @@ def update_incident_status(
 ):
     """
     Update incident status. Requires authorized human dispatcher role.
+    Status changes are persisted to PostgreSQL and reflected immediately
+    in both the ops dashboard and the public citizen tracking endpoint.
     """
     service = IncidentService(db)
     try:
@@ -159,4 +141,3 @@ def update_incident_status(
         message=f"Incident status updated to '{status_update.status.value}'.",
         data=IncidentResponse.model_validate(updated)
     )
-

@@ -1,3 +1,7 @@
+"""
+Assignment service — manages resource-to-incident dispatch workflow.
+All state is persisted in PostgreSQL. No external AWS dependencies.
+"""
 from datetime import datetime, timezone
 from typing import List, Optional
 from sqlalchemy.orm import Session
@@ -9,7 +13,6 @@ from app.schemas.assignment import AssignmentCreate, AssignmentUpdate
 from app.repositories.assignment_repo import AssignmentRepository
 from app.repositories.incident_repo import IncidentRepository
 from app.repositories.audit_repo import AuditRepository
-from app.core.aws import sns_service
 
 
 class AssignmentConflictError(Exception):
@@ -35,9 +38,10 @@ class AssignmentService:
         2. Verifies resource is AVAILABLE and has no conflicting active assignments.
         3. Updates incident to ASSIGNED/IN_PROGRESS.
         4. Transitions resource to DEPLOYED.
-        5. Triggers dispatch notification and records audit event.
+        5. Records audit event.
+        All status changes are persisted to PostgreSQL and immediately visible
+        in both the ops dashboard and the public citizen tracking endpoint.
         """
-        # Begin transaction safety check with row-level locking
         try:
             # Row-level lock on the resource to prevent concurrent race conditions
             resource = (
@@ -140,24 +144,6 @@ class AssignmentService:
                 }
             )
 
-            # Trigger AWS SNS dispatch notification
-            sns_service.publish_dispatch_alert(
-                incident_ref=incident.reference_code,
-                resource_name=resource.name,
-                notes=data.dispatcher_notes or "Dispatched by authorized human control room"
-            )
-
-            # Propagate milestone update to DynamoDB
-            try:
-                from app.services.incident_sync_service import push_status_milestone_to_dynamo
-                push_status_milestone_to_dynamo(
-                    incident.reference_code,
-                    new_incident_status.value,
-                    f"Resource '{resource.name}' assigned by dispatcher"
-                )
-            except Exception:
-                pass
-
             return assignment
 
         except HTTPException:
@@ -211,11 +197,6 @@ class AssignmentService:
             assignment.dispatched_at = now_dt
             if incident:
                 incident.status = IncidentStatusEnum.IN_PROGRESS
-                try:
-                    from app.services.incident_sync_service import push_status_milestone_to_dynamo
-                    push_status_milestone_to_dynamo(incident.reference_code, "in_progress", notes or "Unit dispatched")
-                except Exception:
-                    pass
 
         elif new_status == AssignmentStatusEnum.COMPLETED:
             assignment.completed_at = now_dt
@@ -223,11 +204,6 @@ class AssignmentService:
                 resource.status = ResourceStatusEnum.AVAILABLE
             if incident:
                 incident.status = IncidentStatusEnum.RESOLVED
-                try:
-                    from app.services.incident_sync_service import push_status_milestone_to_dynamo
-                    push_status_milestone_to_dynamo(incident.reference_code, "resolved", notes or "Rescue mission completed")
-                except Exception:
-                    pass
 
         elif new_status == AssignmentStatusEnum.CANCELLED:
             assignment.cancelled_at = now_dt

@@ -134,7 +134,3 @@ app.include_router(health_router, prefix="/api")
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 
-# Mock presigned storage upload endpoint for local testing
-@app.put("/api/mock-storage/{bucket_name}/{file_key:path}")
-async def mock_s3_upload(bucket_name: str, file_key: str, request: Request):
-    return {"status": "uploaded", "bucket": bucket_name, "key": file_key, "size": len(await request.body())}

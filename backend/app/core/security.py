@@ -1,9 +1,15 @@
+"""
+Authentication and authorization for RESQNET FastAPI backend.
+
+Uses simple bearer token role simulation for local development and demo.
+Replace with a real JWT library (python-jose, authlib) tied to your identity
+provider (Auth0, Cognito, Keycloak, etc.) for production deployments.
+"""
 import uuid
 from typing import Optional, List
 from fastapi import Depends, HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
-from app.core.config import settings
 from app.core.logging import logger
 
 security_scheme = HTTPBearer(auto_error=False)
@@ -26,46 +32,19 @@ def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Security(security_scheme)
 ) -> AuthUser:
     """
-    Authenticate user via Amazon Cognito JWT or development bearer token.
-    In local development, if no credentials or a dev token is supplied, returns a development dispatcher user
-    with an explicit warning logged.
-    """
-    # 1. AWS Cognito JWT Verification Mode
-    if settings.USE_AWS_SERVICES and settings.COGNITO_USER_POOL_ID:
-        if not credentials:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Missing authentication credentials",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        token = credentials.credentials
-        try:
-            # Cognito validation boundary
-            from jose import jwt, JWTError
-            # In production, claims are validated against Cognito JWKS URL
-            # For demonstration boundary, extract unverified claims if JWKS is not reachable locally
-            claims = jwt.get_unverified_claims(token)
-            user_id = claims.get("sub", str(uuid.uuid4()))
-            email = claims.get("email", "unknown@resqnet.local")
-            cognito_groups = claims.get("cognito:groups", ["citizen"])
-            return AuthUser(
-                user_id=user_id,
-                email=email,
-                roles=cognito_groups,
-                organization_id=claims.get("custom:org_id"),
-                is_development=False
-            )
-        except Exception as e:
-            logger.error(f"Cognito token validation failed: {str(e)}")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid Cognito authentication token",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+    Resolves the current user from an HTTP Bearer token.
 
-    # 2. Local Development & Testing Mode
+    In local development / demo mode:
+      - No credentials → default dispatcher user (full access).
+      - Token containing 'citizen' → citizen-only user.
+      - Token containing 'responder' → responder user.
+      - Anything else → full dispatcher/admin user.
+
+    Replace this function with real JWT validation for production.
+    """
     if not credentials:
-        # Development default dispatcher for frictionless local review
+        # Development default: frictionless dispatcher access for local review
+        logger.debug("No auth credentials supplied — using development dispatcher identity")
         return AuthUser(
             user_id="00000000-0000-0000-0000-000000000001",
             email="dispatcher@resqnet.local",
@@ -75,7 +54,8 @@ def get_current_user(
         )
 
     token = credentials.credentials
-    # Allow mock tokens: "Bearer citizen-token", "Bearer responder-token", "Bearer dispatcher-token"
+
+    # Allow mock role tokens for demo / frontend testing
     if "citizen" in token.lower():
         return AuthUser(
             user_id="00000000-0000-0000-0000-000000000002",
@@ -91,6 +71,7 @@ def get_current_user(
             is_development=True
         )
 
+    # Default: treat any unknown token as full dispatcher access in dev
     return AuthUser(
         user_id="00000000-0000-0000-0000-000000000001",
         email="dispatcher@resqnet.local",
