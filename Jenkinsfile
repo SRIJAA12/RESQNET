@@ -12,6 +12,22 @@ pipeline {
                 echo 'Source code is checked out by Jenkins SCM.'
             }
         }
+        stage('Debug Workspace') {
+ 	   steps {
+              sh '''
+            	echo "Jenkins workspace: $WORKSPACE"
+            	echo "Backend directory on Jenkins host:"
+            	ls -la "$WORKSPACE/backend"
+
+            	echo "Checking requirements file inside Docker:"
+            	/usr/local/bin/docker run --rm \
+              	-v "$WORKSPACE/backend:/app" \
+              	-w /app \
+              	python:3.11-slim \
+              	sh -c 'pwd; ls -la /app; test -f /app/requirements.txt'
+        '''
+    		}
+	}
 
         stage('Backend Tests') {
             steps {
@@ -20,7 +36,7 @@ pipeline {
                       -v "$WORKSPACE/backend:/app" \
                       -w /app \
                       python:3.11-slim \
-                      sh -c "set -e; \
+        	              sh -c "set -e; \
                         apt-get update; \
                         DEBIAN_FRONTEND=noninteractive apt-get install -y gcc libpq-dev; \
                         pip install -r /app/requirements.txt; \
