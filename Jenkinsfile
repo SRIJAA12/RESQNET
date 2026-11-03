@@ -4,43 +4,60 @@ pipeline {
     environment {
         DOCKER = '/usr/local/bin/docker'
         ANSIBLE_PLAYBOOK = '/opt/resqnet-ansible/deploy.yml'
+        BACKEND_HEALTH_URL = 'http://localhost:8001/api/health'
+    }
+
+    options {
+        timestamps()
+        disableConcurrentBuilds()
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 echo 'Source code is checked out by Jenkins SCM.'
+                sh '''
+                    set -e
+                    echo "Workspace: $WORKSPACE"
+                    test -f "$WORKSPACE/backend/requirements.txt"
+                    test -f "$WORKSPACE/docker-compose.yml" || \
+                    test -f "$WORKSPACE/docker-compose.yaml" || \
+                    test -f "$WORKSPACE/compose.yml" || \
+                    test -f "$WORKSPACE/compose.yaml"
+                '''
             }
         }
-        stage('Debug Workspace') {
- 	   steps {
-              sh '''
-            	echo "Jenkins workspace: $WORKSPACE"
-            	echo "Backend directory on Jenkins host:"
-            	ls -la "$WORKSPACE/backend"
-
-            	echo "Checking requirements file inside Docker:"
-            	/usr/local/bin/docker run --rm \
-              	-v "$WORKSPACE/backend:/app" \
-              	-w /app \
-              	python:3.11-slim \
-              	sh -c 'pwd; ls -la /app; test -f /app/requirements.txt'
-        '''
-    		}
-	}
 
         stage('Backend Tests') {
             steps {
                 sh '''
-                    /usr/local/bin/docker run --rm \
-                      -v "$WORKSPACE/backend:/app" \
-                      -w /app \
-                      python:3.11-slim \
-        	              sh -c "set -e; \
-                        apt-get update; \
-                        DEBIAN_FRONTEND=noninteractive apt-get install -y gcc libpq-dev; \
-                        pip install -r /app/requirements.txt; \
-                        pytest -q /app/tests"
+                    set -e
+
+                    echo "Creating CI test Dockerfile..."
+                    cat > "$WORKSPACE/backend/Dockerfile.ci" <<'EOF'
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir pytest
+
+COPY . .
+
+CMD ["python", "-m", "pytest", "-q", "tests"]
+EOF
+
+                    echo "Building backend test image..."
+                    "$DOCKER" build \
+                        -t resqnet-backend-ci:latest \
+                        -f "$WORKSPACE/backend/Dockerfile.ci" \
+                        "$WORKSPACE/backend"
+
+                    echo "Running backend tests..."
+                    "$DOCKER" run --rm \
+                        resqnet-backend-ci:latest
                 '''
             }
         }
@@ -49,11 +66,10 @@ pipeline {
             steps {
                 sh '''
                     set -e
-                    echo "Validating Docker Compose configuration..."
-                    ${DOCKER} compose config
+                    cd "$WORKSPACE"
 
-                    echo "Building RESQNET Docker images..."
-                    ${DOCKER} compose build
+                    echo "Building RESQNET Compose services..."
+                    "$DOCKER" compose build
                 '''
             }
         }
@@ -62,8 +78,18 @@ pipeline {
             steps {
                 sh '''
                     set -e
+
                     echo "Deploying RESQNET using Ansible..."
-                    ansible-playbook -i localhost, -c local "$ANSIBLE_PLAYBOOK"
+                    test -f "$ANSIBLE_PLAYBOOK"
+
+                    WORKSPACE="$WORKSPACE" \
+                    "$DOCKER" --version >/dev/null
+
+                    WORKSPACE="$WORKSPACE" \
+                    ansible-playbook \
+                        -i localhost, \
+                        -c local \
+                        "$ANSIBLE_PLAYBOOK"
                 '''
             }
         }
@@ -72,16 +98,17 @@ pipeline {
             steps {
                 sh '''
                     set -e
+
                     echo "Checking RESQNET backend health..."
 
-                    for i in $(seq 1 12); do
-                        if curl --fail --silent http://localhost:8001/api/health; then
-                            echo
-                            echo "RESQNET backend health check passed."
+                    for attempt in $(seq 1 12); do
+                        if curl --fail --silent "$BACKEND_HEALTH_URL"; then
+                            echo ""
+                            echo "Backend health check passed."
                             exit 0
                         fi
 
-                        echo "Backend not ready yet. Retrying in 5 seconds..."
+                        echo "Health check attempt $attempt failed; retrying..."
                         sleep 5
                     done
 
@@ -94,7 +121,7 @@ pipeline {
 
     post {
         success {
-            echo 'RESQNET CI/CD pipeline completed successfully!'
+            echo 'RESQNET CI/CD pipeline completed successfully.'
         }
 
         failure {
