@@ -1,16 +1,13 @@
 # RESQNET &mdash; Intelligent Disaster Relief Coordination Ecosystem
 
-[![RESQNET CI](https://github.com/organization/resqnet/actions/workflows/ci.yml/badge.svg)](https://github.com/organization/resqnet/actions/workflows/ci.yml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111.0-009688?logo=fastapi)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-18.3-61DAFB?logo=react)](https://react.dev)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-PostGIS-336791?logo=postgresql)](https://postgis.net)
-[![AWS](https://img.shields.io/badge/AWS-Fargate%20%7C%20RDS%20%7C%20CloudFront-232F3E?logo=amazon-aws)](https://aws.amazon.com)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://www.docker.com)
+[![Jenkins](https://img.shields.io/badge/CI%2FCD-Jenkins%20%7C%20Ansible-D24939?logo=jenkins)](https://www.jenkins.io)
 
 > [!CAUTION]
 > **SIMULATION & TRAINING NOTICE:** RESQNET is designed for simulated emergency management and exercise demonstrations. All demonstration data (coordinates, contact numbers, incident reports) are **100% fictional**. This system is **not connected to official 911 or emergency services**. In an actual life-threatening emergency, contact local emergency services immediately.
-
-> [!TIP]
-> **New to the Project?** Read the step-by-step **[Collaborator & Getting Started Guide](docs/COLLABORATOR_GUIDE.md)** to clone and run both local Docker services and live AWS cloud features in under 5 minutes!
 
 ---
 
@@ -20,63 +17,56 @@
 
 ### Core Workflow:
 ```
-Citizen SOS → Incident Review & Triage → Resource Matching → Authorized Human Dispatcher Approval → Assignment → Response Updates → Verified Resolution
+Citizen SOS → AI Assistive Triage → Incident Review & Verification → Resource Matching → Authorized Human Dispatcher Approval → Deployment → Response Tracking → Verified Resolution
 ```
 
 ### Safety & Governance Mandates:
 * **Human-in-the-Loop:** AI must **never** autonomously execute rescue, medical, or evacuation decisions. All assistive AI triage scores and match suggestions require review and explicit approval by authorized human dispatchers.
-* **Transaction-Safe Dispatch:** Prevents conflicting concurrent assignment of rescue craft through database row-level locking.
+* **Transaction-Safe Dispatch:** Prevents conflicting concurrent assignment of rescue craft through database row-level locking (`SELECT ... FOR UPDATE`).
 * **Audit Trail:** Complete historical state tracking for all incidents and assignments.
+* **Privacy & Sanitization:** Public citizen tracking endpoints deliberately sanitize PII (suppressing phone numbers, personal names, exact coordinates, and internal dispatcher notes).
 
 ---
 
 ## 2. Technology Stack
 
-* **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, React Router v6, Leaflet & React Leaflet, React Hook Form, Zod.
-* **Backend:** Python 3.11, FastAPI, Pydantic v2, SQLAlchemy 2.0, Alembic, PostgreSQL with PostGIS, Pytest.
-* **DevOps:** Docker Compose, GitHub Actions (CI/CD with GitHub OIDC federation), Terraform (IaC).
-* **AWS Target:** ECS with AWS Fargate, Amazon ECR, Amazon RDS PostgreSQL (PostGIS), Amazon S3, Amazon CloudFront, Amazon Cognito, Amazon SNS, Amazon CloudWatch, AWS Secrets Manager.
+* **Frontend:** React 18, TypeScript, Vite 6, Tailwind CSS, React Router v6, Leaflet & React Leaflet, React Hook Form, Zod.
+* **Backend:** Python 3.11, FastAPI, Pydantic v2, SQLAlchemy 2.0, PostgreSQL 16 with PostGIS 3.4, Pytest.
+* **DevOps & CI/CD:** Docker Compose, Jenkins (declarative pipeline), Ansible (automated idempotent deployment).
 
 ---
 
-## 3. Repository Monorepo Structure
+## 3. Monorepo Structure
 
 ```
 RESQNET/
 ├── frontend/                     # React 18 + TypeScript + Vite SPA
 │   ├── src/
-│   │   ├── components/           # Reusable components (Navbar, LeafletMap, IncidentCard, StatusBadge, etc.)
-│   │   ├── layouts/              # MainLayout shell with Disclaimer Banner
-│   │   ├── pages/                # 10 Dedicated Pages (SOS, Queue, Map, Fleet, Shelters, Dispatch, etc.)
-│   │   ├── services/             # API client layer with simulation fallbacks
+│   │   ├── components/           # Reusable UI components (Navbar, LeafletMap, IncidentCard, StatusBadge, etc.)
+│   │   ├── layouts/              # PublicLayout, OpsLayout, ResponderLayout, PartnerLayout
+│   │   ├── pages/                # Citizen, Dispatcher, Responder, Partner & Admin Screens
+│   │   ├── services/             # Unified API client layer (api.ts, sosApi.ts)
 │   │   ├── types/                # Domain TypeScript models
 │   │   └── App.tsx               # Route configurations
-│   ├── public/                   # PWA manifest & static assets
+│   ├── public/                   # Static assets & icons
 │   ├── Dockerfile                # Production multi-stage Nginx container
 │   ├── package.json
 │   └── vite.config.ts
 ├── backend/                      # Python FastAPI application
 │   ├── app/
-│   │   ├── api/v1/endpoints/     # REST routes (health, events, incidents, resources, shelters, assignments, dashboard)
-│   │   ├── core/                 # Config, AWS boundaries (Cognito, S3, SNS, Secrets Manager), structured logging
+│   │   ├── api/v1/endpoints/     # REST routes (health, public_incidents, incidents, resources, shelters, assignments, dashboard, etc.)
+│   │   ├── core/                 # App configuration & structured logging
 │   │   ├── db/                   # Session, Base, and synthetic flood data seeder
 │   │   ├── models/               # SQLAlchemy 2.x models with PostGIS spatial fields
 │   │   ├── repositories/         # Database access layer
 │   │   ├── schemas/              # Pydantic v2 validation schemas
-│   │   ├── services/             # Transaction-safe business logic & AI triage heuristics
+│   │   ├── services/             # Business logic, conflict-free assignments & AI triage heuristics
 │   │   └── main.py               # FastAPI entry point & CORS
-│   ├── alembic/                  # Database migration scripts (0001_initial_schema.py)
-│   ├── tests/                    # Pytest test suite (100% passing)
-│   ├── Dockerfile
+│   ├── tests/                    # Integration and unit test suite
+│   ├── Dockerfile                # Backend container definition
 │   └── requirements.txt
-├── infrastructure/               # Terraform Infrastructure as Code
-│   └── terraform/
-│       ├── modules/              # Networking, RDS PostGIS, ECS Fargate, S3 CloudFront, Cognito, SNS, IAM OIDC, CloudWatch
-│       └── environments/         # dev/ and prod/ environments
-├── .github/
-│   └── workflows/                # ci.yml, cd.yml (OIDC), security.yml
-├── docs/                         # Architecture, API spec, AWS setup guide, Roadmap
-├── compose.yaml                  # Local development Docker Compose
+├── compose.yaml                  # Local development Docker Compose (PostGIS + Backend + Frontend)
+├── Jenkinsfile                   # Automated CI/CD pipeline definition
 ├── .env.example                  # Environment configuration template
 ├── .gitignore
 └── README.md
@@ -84,9 +74,7 @@ RESQNET/
 
 ---
 
-## 4. Quickstart: Local Development
-
-### Option A: Running via Docker Compose (Recommended)
+## 4. Quickstart: Running with Docker Compose (Recommended)
 
 Requires Docker Desktop installed and running:
 
@@ -96,14 +84,13 @@ Requires Docker Desktop installed and running:
    cd RESQNET
    ```
 
-2. **Start the complete stack (PostGIS + FastAPI + Vite Frontend):**
+2. **Start the complete stack (PostGIS + FastAPI + Frontend):**
    ```bash
-   docker compose up --build
+   docker compose up -d --build
    ```
-   *(All default environment configurations are built-in. No manual `.env` is required to run!)*
 
 3. **Seed synthetic flood response demonstration data:**
-   In a second terminal:
+   In your terminal:
    ```bash
    docker compose exec backend python -m app.db.seed
    ```
@@ -111,40 +98,14 @@ Requires Docker Desktop installed and running:
 4. **Access the application:**
    * **Frontend Web App:** [http://localhost:5174](http://localhost:5174)
    * **Backend Health Check:** [http://localhost:8001/api/health](http://localhost:8001/api/health)
-   * **Interactive API Documentation:** [http://localhost:8001/api/docs](http://localhost:8001/api/docs)
+   * **Interactive API Documentation (Swagger):** [http://localhost:8001/api/docs](http://localhost:8001/api/docs)
    * **PostgreSQL / PostGIS Database:** `localhost:5433` (`resqnet_db`)
 
 ---
 
-### Option B: AWS Serverless Citizen SOS Pipeline
+## 5. Running Locally Outside Docker
 
-RESQNET includes a dedicated, highly-available serverless emergency pipeline (AWS SAM, Lambda, DynamoDB, API Gateway HTTP API) located in `backend_serverless/`.
-
-#### Using the Live Deployed Cloud Backend (Default)
-When running `docker compose up`, the frontend is automatically pre-configured to communicate with the live AWS deployment in `eu-west-1`:
-* **Live API Gateway:** `https://ncwcst8z63.execute-api.eu-west-1.amazonaws.com/v1`
-* Anyone running the frontend can immediately submit citizen SOS requests (`/sos`) and track tickets in real-time (`/status`) against the live cloud DynamoDB table.
-
-#### Deploying to Your Own AWS Account
-If you or a collaborator want to deploy your own separate AWS serverless stack:
-
-1. **Prerequisites:**
-   * [AWS CLI](https://aws.amazon.com/cli/) configured (`aws configure`)
-   * [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html) installed (`sam --version`)
-2. **Build and deploy:**
-   ```bash
-   sam build
-   sam deploy
-   ```
-   *(All defaults, IAM capabilities, and table overrides are saved in `samconfig.toml`)*
-3. **Copy your API Gateway URL:**
-   Update `VITE_SERVERLESS_API_URL` in `frontend/.env` with your newly deployed URL.
-
----
-
-### Option B: Running Locally Outside Docker
-
-#### 1. Backend Setup:
+### 1. Backend Setup:
 ```bash
 cd backend
 python -m venv .venv
@@ -153,17 +114,11 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 # Install requirements
 pip install -r requirements.txt
 
-# Run database migrations
-alembic upgrade head
-
-# Seed synthetic flood response data
-python -m app.db.seed
-
 # Start FastAPI development server
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-#### 2. Frontend Setup:
+### 2. Frontend Setup:
 ```bash
 cd frontend
 npm install
@@ -174,12 +129,11 @@ npm run dev
 
 ---
 
-## 5. Running Automated Tests & Quality Checks
+## 6. Running Automated Tests & Quality Checks
 
 ### Backend Unit & Integration Tests:
-Run the complete Pytest suite (tests incident validation, AI triage scoring, transaction safety, and conflict prevention):
+Run the complete Pytest suite (tests incident validation, public SOS submission, tracking by ref, AI triage scoring, transaction safety, and conflict prevention):
 ```bash
-# From workspace root
 python -m pytest backend/tests -v
 ```
 
@@ -192,25 +146,33 @@ npm run build   # Production bundle verification
 
 ---
 
-## 6. Frontend Pages Guide
+## 7. CI/CD & Deployment Pipeline
 
-The web application contains 10 purpose-built screens:
+RESQNET uses a modern, local-first CI/CD pipeline coordinated by **Jenkins**, executed in **Docker**, and deployed via **Ansible**:
 
-1. **Public Landing Page (`/`):** Simulated disaster scenario overview, live KPI pulse, and emergency reporting entry points.
-2. **Citizen SOS Form (`/sos`):** Emergency reporting wizard with trapped counts, medical flags, and GPS presets.
-3. **Citizen Status Tracker (`/status`):** Real-time incident timeline and responder updates tracked by reference code.
-4. **Control Room Dashboard (`/dashboard`):** Real-time telemetry, urgency distribution charts, and immediate action center.
-5. **Interactive Incident Map (`/map`):** Full-screen Leaflet map displaying active flood inundation polygons, SOS beacons, shelters, and fleet.
-6. **Incident Queue (`/queue`):** Triage queue with status/priority filters, search, and dispatcher status verification.
-7. **Fleet & Responders Registry (`/resources`):** Fleet management for rescue boats, high-water trucks, paramedic ambulances, and drones.
-8. **Shelter & Supplies Overview (`/shelters`):** Bed capacity meters, backup power, water purifiers, and relief inventory.
-9. **Dispatch Review Screen (`/dispatch`):** Human-in-the-loop authorization matching nearest units with transaction-safe locking.
-10. **Unserved Needs Dashboard (`/unserved`):** Bottleneck analysis identifying delayed requests, overloaded shelters, and resource shortages.
+```
+Git Push -> Jenkins Pipeline
+             ├── 1. Checkout & workspace verification
+             ├── 2. Spin up ephemeral PostGIS test container & run Pytest
+             ├── 3. Build production Docker images
+             ├── 4. Ansible Playbook (deploy.yml) idempotent deployment
+             └── 5. Automated health check verification (http://localhost:8001/api/health)
+```
+
+1. **Jenkins (`Jenkinsfile`)**: Manages the automated build lifecycle, runs integration tests in isolated containers, and delegates deployment to Ansible.
+2. **Docker Compose (`compose.yaml`)**: Runs PostGIS 16, the FastAPI backend, and Nginx-based frontend with health checks and volume persistence.
+3. **Ansible (`deploy.yml`)**: Automates deployment execution, validates Compose syntax, and performs safe rolling container updates with automatic health verification.
 
 ---
 
-## 7. Cloud Deployment (AWS)
+## 8. Feature Portals Overview
 
-* See [docs/aws_setup_guide.md](docs/aws_setup_guide.md) for the manual preparation sequence and Terraform provisioning commands.
-* See [docs/architecture.md](docs/architecture.md) for architectural sequence and topology diagrams.
-* See [docs/roadmap_and_next_steps.md](docs/roadmap_and_next_steps.md) for the AWS cost model and upcoming feature roadmap.
+1. **Citizen Portal (`/request-assistance`, `/status`, `/safety`):** Public emergency SOS submission with headcount, medical, and trapped status; real-time public milestone tracking by reference code; offline flood guidance.
+2. **Control Room Dashboard (`/ops/command-center`):** Real-time telemetry, urgency distribution meters, and rapid-response action queues.
+3. **Interactive GIS Map (`/ops/map`):** Live full-screen map with color-coded incident beacons, deployed fleet positions, and shelter occupancy indicators.
+4. **Incident Queue & Triage (`/ops/incidents`):** Triage queue powered by assistive AI vulnerability scoring ($0.0 - 100.0$) with mandatory written rejection auditing.
+5. **Fleet & Responders Registry (`/ops/resources`):** Real-time resource status management for rescue boats, high-water trucks, paramedic ambulances, and drones.
+6. **Shelters & Inventory Management (`/ops/shelters`, `/ops/inventory`, `/ops/distributions`):** Bed capacity tracking, emergency supply catalogs (water, rations, kits), and distribution manifest tracking.
+7. **Responder Portal (`/responder/tasks`):** Mobile mission cards with navigation coordinates, tactical radio channels, and one-tap status updates.
+8. **Relief Partner Portal (`/partner/inventory`):** Scoped access for partner NGOs (Red Cross, SDRF) to manage warehouse supplies without accessing government fleet dispatches.
+9. **Intelligence & Audit (`/ops/forecasts`, `/ops/audit`):** Sector inundation forecasts and immutable audit ledger tracking all state transitions.
